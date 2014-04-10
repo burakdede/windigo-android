@@ -23,40 +23,39 @@ Here is simple example.
 
 ### 1. Define your remote api with simple interface
 ```java
-	@RestApi
-	public interface LastfmRestApi {
+@RestApi
+public interface LastfmRestApi {
 
-		@Get("/2.0/")
-		Response getAlbumInfo(@QueryParam("method") String method, @QueryParam("api_key") String api_key, ...);
-	}
+	@Get("/2.0/")
+	Response getAlbumInfo(@QueryParam("method") String method, @QueryParam("api_key") String api_key, ...);
+}
 ```
 
 another one
+```java
+@RestApi
+public interface OpenWeatherApi {
 
-	@RestApi
-	public interface OpenWeatherApi {
-
-		@Get("/weather")
-		ForecastResponse getForecast(@QueryParam("lat") double latitude, @QueryParam("lon") double longtiude);
-	}
-
+	@Get("/weather")
+	ForecastResponse getForecast(@QueryParam("lat") double latitude, @QueryParam("lon") double longtiude);
+}
+```
 ### 2. Create http client from factory method with simple one liner
+```java
+// we need default http client
+HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
 
-	// we need default http client
-	HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
-
-
+```
 ### 3. Instantiate your rest api interface
-
-	// call factory method with url and interface class for rest api
-	lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
-	
+```java
+// call factory method with url and interface class for rest api
+lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
+```	
 ### 4. Start calling your rest methods
-
-	// get type safe response directly
-	Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", "Cher", "Believe", "json");
-	  
-	
+```java
+// get type safe response directly
+Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", "Cher", "Believe", "json");
+```	
 # Download
 Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).  
 
@@ -64,44 +63,44 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 # Windigo Annotations
 ### RestApi
 Use with interface, indicates its a rest api interface
-
-	@RestApi
-	public interface YourApiInterface
-	
+```java
+@RestApi
+public interface YourApiInterface
+```	
 ### Get
 Use with methods, indicates its a get request
-
-	@Get("/weather")
-
+```java
+@Get("/weather")
+```
 ### Post
 Used with methods, indicates its a post request
-
-	@Post("/user/new")
-	
+```java
+@Post("/user/new")
+```	
 ### Header
 Used as parameter, give headers you want to send with http request.
-
-	User getUser(@Header("X-Auth") String token, @Header("Accept-Encoding") String encoding)
-	
+```java
+User getUser(@Header("X-Auth") String token, @Header("Accept-Encoding") String encoding)
+```	
 ### Placeholder
 Used as parameter, replaces placeholder given with endpoint
-
-	Get("/artist/{id}")
-	Artist getArtist(@PlaceHolder("id") int id)
-		
+```java
+Get("/artist/{id}")
+Artist getArtist(@PlaceHolder("id") int id)
+```		
 ### QueryParam
 Used as parameter, indicates the parameters send with request, does not matter get or post
-
-	// /weather?lat=x&lng=y
-	@Get("/weather")
-	Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
-	
+```java
+// /weather?lat=x&lng=y
+@Get("/weather")
+Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
+```	
 ### QueryParamsObject
 Used as parameter, send plain object as query parameter by mapping every field
-	
-	@Get("/user/update")
-	User updateUser(@QueryParamsObject User user)
-	  
+```java	
+@Get("/user/update")
+User updateUser(@QueryParamsObject User user)
+```	  
 	  
 # Beware
 * Current http/network operations on **Windigo** client are operated synchronously
