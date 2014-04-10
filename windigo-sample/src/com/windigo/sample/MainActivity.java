@@ -1,5 +1,27 @@
 package com.windigo.sample;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.scheme.SocketFactory;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -15,6 +37,9 @@ import com.windigo.sample.LastfmRestApi;
 import com.windigo.sample.OpenWeatherApi;
 import com.windigo.sample.lastfm.Response;
 import com.windigo.sample.weather.ForecastResponse;
+import com.windigo.sample.weather.MainResponse;
+import com.windigo.sample.weather.WeatherResponse;
+import com.windigo.sample.weather.WindResponse;
 
 public class MainActivity extends Activity {
 	
@@ -41,8 +66,12 @@ public class MainActivity extends Activity {
 				OpenWeatherApi.class, httpClient);
 		
 		try {
+			// this is windigo request easy and clean
 			//new ForecastTask().execute();
-			new LastfmTask().execute();
+			//new LastfmTask().execute();
+			
+			// this is regular rest request with bunch of repeatitve code
+			new RegularHttpRestTask().execute();
 		} catch (Exception e) {
 			Log.d(TAG, e.getCause().toString());
 		}
@@ -69,7 +98,7 @@ public class MainActivity extends Activity {
 		@Override
 		protected ForecastResponse doInBackground(Void... params) {
 			
-			return openWeatherApi.getForecast(47.663267, -122.384187);
+			return openWeatherApi.getForecast(41.163267, 29.094187);
 		}
 		
 		@Override
@@ -79,6 +108,79 @@ public class MainActivity extends Activity {
 			// you can access all of the properties easily
 			responseTextView.setText("Completed : " + result.getWind().getSpeed());
 		}
+	}
+	
+	private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
+
+		@Override
+		protected ForecastResponse doInBackground(Void... params) {
+			
+			final HttpParams httpParams = new BasicHttpParams();
+			
+	        final SchemeRegistry supportedSchemes = new SchemeRegistry();
+
+	        final SocketFactory sf = PlainSocketFactory.getSocketFactory();
+	        supportedSchemes.register(new Scheme("http", sf, 80));
+	        supportedSchemes.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+			
+			HttpConnectionParams.setStaleCheckingEnabled(httpParams, false);
+			HttpConnectionParams.setConnectionTimeout(httpParams, 60 * 1000);
+			HttpConnectionParams.setSoTimeout(httpParams, 60 * 1000);
+			HttpConnectionParams.setSocketBufferSize(httpParams, 8192);
+			
+			final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
+	                supportedSchemes);
+			
+			HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
+			HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
+			HttpResponse response = null;
+			ForecastResponse forecast = new ForecastResponse();
+			JSONObject responseJsonObject;
+			
+			try {
+				response =  httpClient.executeHttpRequest(get);
+				String responseString = EntityUtils.toString(response.getEntity());
+				responseJsonObject = new JSONObject(responseString);
+				
+				forecast.setName(responseJsonObject.getString("name"));
+				
+				// get main response
+				JSONObject mainJsonObject = responseJsonObject.getJSONObject("main");
+				forecast.setMain(new MainResponse(mainJsonObject.getDouble("temp"), 
+											mainJsonObject.getDouble("temp_min"), 
+											mainJsonObject.getDouble("temp_max"), 
+											mainJsonObject.getInt("humidity")));
+				
+				// get wind respose
+				JSONObject windJsonObject = responseJsonObject.getJSONObject("wind");
+				forecast.setWind(new WindResponse((float) windJsonObject.getDouble("speed")));
+				
+				JSONArray weathJsonArray = responseJsonObject.getJSONArray("weather");
+				List<WeatherResponse> weatherResponses = new ArrayList<WeatherResponse>();
+				for (int i = 0; i < weathJsonArray.length(); i++) {
+					JSONObject weatherJsonObject = weathJsonArray.getJSONObject(i);
+					weatherResponses.add(new WeatherResponse(weatherJsonObject.getString("description"), weatherJsonObject.getString("icon")));
+				}
+				forecast.setWeather(weatherResponses);
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			
+			
+			return forecast;
+		}
+		
+		@Override
+		protected void onPostExecute(ForecastResponse result) {
+			super.onPostExecute(result);
+			// use however you want
+			//responseTextView.setText(result.getWind());
+			responseTextView.setText(result.toString());
+		}
+		
 	}
 
 	@Override

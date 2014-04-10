@@ -5,8 +5,10 @@ int id action_settings 0x7f080001
 int id responseTextView 0x7f080000
 int layout activity_main 0x7f030000
 int menu main 0x7f070000
+int menu non_windigo 0x7f070001
 int string action_settings 0x7f040001
 int string app_name 0x7f040000
 int string hello_world 0x7f040002
+int string title_activity_non_windigo 0x7f040003
 int style AppBaseTheme 0x7f050000
 int style AppTheme 0x7f050001
