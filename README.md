@@ -62,97 +62,97 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 # Before & After
 ###With windigo its easy and clean.
 ```java	
-	// we need default http client
-	HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
-		
-	// call factory method with url and interface class for rest api
-	lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
-		
-	// call factory method with url and interface class for rest api		
-	openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-				OpenWeatherApi.class, httpClient);
-				
-	private class ForecastTask extends AsyncTask<Void, Integer, ForecastResponse> {
-
-		@Override
-		protected ForecastResponse doInBackground(Void... params) {
+// we need default http client
+HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
+	
+// call factory method with url and interface class for rest api
+lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
+	
+// call factory method with url and interface class for rest api		
+openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
+			OpenWeatherApi.class, httpClient);
 			
-			return openWeatherApi.getForecast(41.163267, 29.094187);
-		}
-	}	
+private class ForecastTask extends AsyncTask<Void, Integer, ForecastResponse> {
+
+	@Override
+	protected ForecastResponse doInBackground(Void... params) {
+		
+		return openWeatherApi.getForecast(41.163267, 29.094187);
+	}
+}	
 ```
 ###Without windigo library simple request like this gets out of your hand and becomes complicated.
 ```java
-	private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
+private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
 
-		@Override
-		protected ForecastResponse doInBackground(Void... params) {
-			
-			final HttpParams httpParams = new BasicHttpParams();
-			
-	        final SchemeRegistry supportedSchemes = new SchemeRegistry();
+	@Override
+	protected ForecastResponse doInBackground(Void... params) {
+		
+		final HttpParams httpParams = new BasicHttpParams();
+		
+        final SchemeRegistry supportedSchemes = new SchemeRegistry();
 
-	        final SocketFactory sf = PlainSocketFactory.getSocketFactory();
-	        supportedSchemes.register(new Scheme("http", sf, 80));
-	        supportedSchemes.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+        final SocketFactory sf = PlainSocketFactory.getSocketFactory();
+        supportedSchemes.register(new Scheme("http", sf, 80));
+        supportedSchemes.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+		
+		HttpConnectionParams.setStaleCheckingEnabled(httpParams, false);
+		HttpConnectionParams.setConnectionTimeout(httpParams, 60 * 1000);
+		HttpConnectionParams.setSoTimeout(httpParams, 60 * 1000);
+		HttpConnectionParams.setSocketBufferSize(httpParams, 8192);
+		
+		final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
+                supportedSchemes);
+		
+		HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
+		HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
+		HttpResponse response = null;
+		ForecastResponse forecast = new ForecastResponse();
+		JSONObject responseJsonObject;
+		
+		try {
+			response =  httpClient.executeHttpRequest(get);
+			String responseString = EntityUtils.toString(response.getEntity());
+			responseJsonObject = new JSONObject(responseString);
 			
-			HttpConnectionParams.setStaleCheckingEnabled(httpParams, false);
-			HttpConnectionParams.setConnectionTimeout(httpParams, 60 * 1000);
-			HttpConnectionParams.setSoTimeout(httpParams, 60 * 1000);
-			HttpConnectionParams.setSocketBufferSize(httpParams, 8192);
+			forecast.setName(responseJsonObject.getString("name"));
 			
-			final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
-	                supportedSchemes);
+			// get main response
+			JSONObject mainJsonObject = responseJsonObject.getJSONObject("main");
+			forecast.setMain(new MainResponse(mainJsonObject.getDouble("temp"), 
+										mainJsonObject.getDouble("temp_min"), 
+										mainJsonObject.getDouble("temp_max"), 
+										mainJsonObject.getInt("humidity")));
 			
-			HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
-			HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
-			HttpResponse response = null;
-			ForecastResponse forecast = new ForecastResponse();
-			JSONObject responseJsonObject;
+			// get wind respose
+			JSONObject windJsonObject = responseJsonObject.getJSONObject("wind");
+			forecast.setWind(new WindResponse((float) windJsonObject.getDouble("speed")));
 			
-			try {
-				response =  httpClient.executeHttpRequest(get);
-				String responseString = EntityUtils.toString(response.getEntity());
-				responseJsonObject = new JSONObject(responseString);
-				
-				forecast.setName(responseJsonObject.getString("name"));
-				
-				// get main response
-				JSONObject mainJsonObject = responseJsonObject.getJSONObject("main");
-				forecast.setMain(new MainResponse(mainJsonObject.getDouble("temp"), 
-											mainJsonObject.getDouble("temp_min"), 
-											mainJsonObject.getDouble("temp_max"), 
-											mainJsonObject.getInt("humidity")));
-				
-				// get wind respose
-				JSONObject windJsonObject = responseJsonObject.getJSONObject("wind");
-				forecast.setWind(new WindResponse((float) windJsonObject.getDouble("speed")));
-				
-				JSONArray weathJsonArray = responseJsonObject.getJSONArray("weather");
-				List<WeatherResponse> weatherResponses = new ArrayList<WeatherResponse>();
-				for (int i = 0; i < weathJsonArray.length(); i++) {
-					JSONObject weatherJsonObject = weathJsonArray.getJSONObject(i);
-					weatherResponses.add(new WeatherResponse(weatherJsonObject.getString("description"), weatherJsonObject.getString("icon")));
-				}
-				forecast.setWeather(weatherResponses);
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (JSONException e) {
-				e.printStackTrace();
+			JSONArray weathJsonArray = responseJsonObject.getJSONArray("weather");
+			List<WeatherResponse> weatherResponses = new ArrayList<WeatherResponse>();
+			for (int i = 0; i < weathJsonArray.length(); i++) {
+				JSONObject weatherJsonObject = weathJsonArray.getJSONObject(i);
+				weatherResponses.add(new WeatherResponse(weatherJsonObject.getString("description"), weatherJsonObject.getString("icon")));
 			}
+			forecast.setWeather(weatherResponses);
 			
-			
-			return forecast;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
 		}
 		
-		@Override
-		protected void onPostExecute(ForecastResponse result) {
-			super.onPostExecute(result);
-			responseTextView.setText(result.toString());
-		}
 		
+		return forecast;
 	}
+	
+	@Override
+	protected void onPostExecute(ForecastResponse result) {
+		super.onPostExecute(result);
+		responseTextView.setText(result.toString());
+	}
+	
+}
 ```
 
 # Windigo Annotations
