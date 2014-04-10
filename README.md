@@ -61,7 +61,7 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 
 # Before & After
 ###With windigo its easy and clean.
-	
+```java	
 	// we need default http client
 	HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
 		
@@ -80,9 +80,9 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 			return openWeatherApi.getForecast(41.163267, 29.094187);
 		}
 	}	
-
+```
 ###Without windigo library simple request like this gets out of your hand and becomes complicated.
-
+```java
 	private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
 
 		@Override
@@ -153,7 +153,7 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 		}
 		
 	}
-
+```
 
 # Windigo Annotations
 ### RestApi
