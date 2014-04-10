@@ -67,35 +67,35 @@ Use with interface, indicates its a rest api interface
 @RestApi
 public interface YourApiInterface
 ```	
-### Get
+### @Get
 Use with methods, indicates its a get request
 ```java
 @Get("/weather")
 ```
-### Post
+### @Post
 Used with methods, indicates its a post request
 ```java
 @Post("/user/new")
 ```	
-### Header
+### @Header
 Used as parameter, give headers you want to send with http request.
 ```java
 User getUser(@Header("X-Auth") String token, @Header("Accept-Encoding") String encoding)
 ```	
-### Placeholder
+### @Placeholder
 Used as parameter, replaces placeholder given with endpoint
 ```java
 Get("/artist/{id}")
 Artist getArtist(@PlaceHolder("id") int id)
 ```		
-### QueryParam
+### @QueryParam
 Used as parameter, indicates the parameters send with request, does not matter get or post
 ```java
 // /weather?lat=x&lng=y
 @Get("/weather")
 Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
 ```	
-### QueryParamsObject
+### @QueryParamsObject
 Used as parameter, send plain object as query parameter by mapping every field
 ```java	
 @Get("/user/update")
@@ -116,7 +116,7 @@ Only dependency windigo needs is [google gson](https://code.google.com/p/google-
 * Response caching
 * Advanced logging and profiling for requests
 * Detailed exception and error handling  
-  
+
 
 # License
  	Copyright (C) Burak Dede.
