@@ -23,13 +23,14 @@ Here is simple example.
  
 
 ### 1. Define your remote api with simple interface
-
+	```java
 	@RestApi
 	public interface LastfmRestApi {
 
 		@Get("/2.0/")
 		Response getAlbumInfo(@QueryParam("method") String method, @QueryParam("api_key") String api_key, ...);
 	}
+	```
 
 
 another one
@@ -59,7 +60,7 @@ another one
 	  
 	
 # Download
-Download latest jar from [here]().  
+Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).  
 
 
 # Windigo Annotations
