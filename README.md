@@ -23,6 +23,8 @@
 # How it works
 
 Here is simple example.  
+
+[Technical Into](http://blog.burakdede.com/windigo-intro-for-contributors/)
  
 
 ### 1. Define your remote api with simple interface
@@ -64,21 +66,10 @@ Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59
 Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).  
 
 # Before & After
+
 ###With windigo its easy and clean.
+
 ```java	
-<<<<<<< HEAD
-	// we need default http client
-	HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
-		
-	// call factory method with url and interface class for rest api
-	lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
-		
-	// call factory method with url and interface class for rest api		
-	openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-				OpenWeatherApi.class, httpClient);
-	// this is asynchronous operation
-	ForecastpResponse forecast	= openWeatherApi.getForecast(41.163267, 29.094187);
-=======
 // we need default http client
 HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
 	
@@ -88,18 +79,12 @@ lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", 
 // call factory method with url and interface class for rest api		
 openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
 			OpenWeatherApi.class, httpClient);
-			
-private class ForecastTask extends AsyncTask<Void, Integer, ForecastResponse> {
-
-	@Override
-	protected ForecastResponse doInBackground(Void... params) {
-		
-		return openWeatherApi.getForecast(41.163267, 29.094187);
-	}
-}	
->>>>>>> FETCH_HEAD
+// this is asynchronous operation
+ForecastpResponse forecast	= openWeatherApi.getForecast(41.163267, 29.094187);
 ```
+
 ###Without windigo library simple request like this gets out of your hand and becomes complicated.
+
 ```java
 private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
 
@@ -169,7 +154,6 @@ private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastRespo
 		super.onPostExecute(result);
 		responseTextView.setText(result.toString());
 	}
-	
 }
 ```
 
@@ -225,6 +209,7 @@ Only dependency windigo needs is [google gson](https://code.google.com/p/google-
 
 
 # Roadmap
+* Replace OkHttp with HttpClient
 * Optional asynchronous requests with callbacks
 * Response caching
 * Advanced logging and profiling for requests
