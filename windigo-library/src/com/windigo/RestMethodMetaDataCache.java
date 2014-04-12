@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -32,6 +33,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.windigo.annotations.Get;
@@ -47,6 +49,7 @@ import com.windigo.http.HttpClient;
 import com.windigo.parsers.ResponseTypeParser;
 import com.windigo.types.RequestType;
 import com.windigo.types.Response;
+import com.windigo.utils.GlobalSettings;
 import com.windigo.utils.StringHelper;
 
 /**
@@ -59,6 +62,8 @@ import com.windigo.utils.StringHelper;
 public class RestMethodMetaDataCache {
 	
 	private static final String TAG = RestMethodMetaDataCache.class.getCanonicalName();
+	
+	private static final boolean DEBUG = GlobalSettings.DEBUG;
 
 	private Method method;
 	
@@ -143,7 +148,7 @@ public class RestMethodMetaDataCache {
 	 * @param args
 	 * @return {@link List} of {@link NameValuePair}
 	 */
-	private static NameValuePair[] getListOfNameValuePairs(Map<Integer, String> queryParams, Object[] args) {
+	private static NameValuePair[] convertToNameValuePairs(Map<Integer, String> queryParams, Object[] args) {
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 		
 		if (queryParams.size() > 0) {			
@@ -170,7 +175,7 @@ public class RestMethodMetaDataCache {
 	 * 
 	 * @return {@link String} of url encoded query params url 
 	 */
-	private String mapObjectToQueryParamsUrlString(Object object) 
+	private String parseQueryParamsObjectString(Object object) 
 			throws IllegalAccessException, IllegalArgumentException {
 		
 		Class<?> paramClass = object.getClass();
@@ -240,6 +245,51 @@ public class RestMethodMetaDataCache {
     	return headersArray;
     }
     
+    
+    /**
+     * Make requests asyncronously with {@link AsyncTask} and return {@link HttpResponse}
+     * 
+     * @param url
+     * @param parameters
+     * @return {@link HttpResponse}
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * 
+     */
+    public HttpResponse makeRequestAsync(final String url, final NameValuePair[] parameters) 
+    		throws InterruptedException, ExecutionException {
+    	
+    	AsyncTask<Void, Integer, HttpResponse> backgroundTask = new AsyncTask<Void, Integer, HttpResponse>() {
+    		
+			@Override
+			protected HttpResponse doInBackground(Void... params) {
+				try {
+					switch (requestType) {
+						case GET:
+							return httpClient.doHttpGet(url, parameters);
+						case POST:
+							return httpClient.doHttpPost(url, parameters);
+						default:
+							throw new IllegalStateException("Http method annotation " +
+									"does not exist (Get, Post)");
+					}
+				} catch (HttpCredentialException e) {
+					e.printStackTrace();
+				} catch (HttpEndpointNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (BaseException e) {
+					e.printStackTrace();
+				}
+				return null;
+			}
+    		
+		}.execute();
+
+    	return backgroundTask.get();
+    }
+    
 	
 	/**
 	 * Invoke operation on behalf of rest service
@@ -253,41 +303,38 @@ public class RestMethodMetaDataCache {
 	 * @throws BaseException
 	 * @throws IllegalArgumentException 
 	 * @throws IllegalAccessException 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	public <T> Object invoke(String baseUrl, Object[] args) 
 			throws HttpCredentialException, HttpEndpointNotFoundException, 
-			IOException, BaseException, IllegalAccessException, IllegalArgumentException {
+			IOException, BaseException, IllegalAccessException, IllegalArgumentException, 
+			InterruptedException, ExecutionException {
 		
-		String fullUrl = baseUrl + requestPath;
 		HttpResponse httpResponse;
 		Response response;
+		String fullUrl = baseUrl + requestPath;
 		
-		// parse and replace any placeholder parameters
-		fullUrl = parsePlaceholderParams(fullUrl, placeholderParms, args);
+		// have placeholder parameters like http://example.org/user/{id}
+		if (placeholderParms.size() > 0) {
+			fullUrl = parsePlaceholderParams(fullUrl, placeholderParms, args);
+		}
 		
-		// set additional headers
+		// have headers parameter @Header
 		if (headerParams.size() > 0) {
 			httpClient.setHeaders(parseHeaderParams(headerParams, args));
 		}
 		
-		switch (requestType) {
-			case GET:
-				// map plain java class as query parameters
-				if (haveQueryParamObject)  fullUrl = fullUrl + mapObjectToQueryParamsUrlString(args[indexOfQueryParamObject]);
-				httpResponse = httpClient.doHttpGet(fullUrl, getListOfNameValuePairs(queryParams, args));
-				response = new Response(httpResponse);
-				Log.d(TAG, "Raw response: " + response.getRawString());
-				return typeParser.parse(response.getRawString());
-				
-			case POST:
-				httpResponse = httpClient.doHttpPost(fullUrl, getListOfNameValuePairs(queryParams, args));
-				response = new Response(httpResponse);
-				Log.d(TAG, "Raw response: " + response.getRawString());
-				return typeParser.parse(response.getRawString());
-				
-			default:
-				throw new IllegalStateException("Http method annotation does not exist (Get, Post)");
+		// have object as query parameter @QueryParamsObject
+		if (haveQueryParamObject) {
+			fullUrl = fullUrl + parseQueryParamsObjectString(args[indexOfQueryParamObject]);
 		}
+		
+		httpResponse = makeRequestAsync(fullUrl, convertToNameValuePairs(queryParams, args));
+		response = new Response(httpResponse);
+		if (DEBUG && response != null) Log.d(TAG, "Raw response: " + response.getRawString());
+		
+		return typeParser.parse(response.getRawString());
 		
 	}
 }

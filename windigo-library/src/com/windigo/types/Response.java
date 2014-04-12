@@ -52,9 +52,11 @@ public final class Response {
 	
 	public Response(HttpResponse httpResponse) throws BaseException, IOException {
 		if (httpResponse == null) {
-			throw new IllegalArgumentException("Http repsonse object is null");
+			rawString = "";
+			reason = "Http response is null";
+		} else {
+			handleHttpResponse(httpResponse);			
 		}
-		handleHttpResponse(httpResponse);
 	}
 	
 

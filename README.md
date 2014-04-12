@@ -15,6 +15,10 @@
 
 * **Windigo** make request for you and return your model objects from remote api, no need to parse your custom objects, this is where type safety comes in.  
 
+# Whats New
+
+* Current operations working on asynchronously thanks to AsyncTask code will be much cleaner.
+
 
 # How it works
 
@@ -71,15 +75,8 @@ Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/wi
 	// call factory method with url and interface class for rest api		
 	openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
 				OpenWeatherApi.class, httpClient);
-				
-	private class ForecastTask extends AsyncTask<Void, Integer, ForecastResponse> {
-
-		@Override
-		protected ForecastResponse doInBackground(Void... params) {
-			
-			return openWeatherApi.getForecast(41.163267, 29.094187);
-		}
-	}	
+	// this is asynchronous operation
+	ForecastpResponse forecast	= openWeatherApi.getForecast(41.163267, 29.094187);
 ```
 ###Without windigo library simple request like this gets out of your hand and becomes complicated.
 ```java
@@ -198,7 +195,7 @@ User updateUser(@QueryParamsObject User user)
 ```	  
 	  
 # Beware
-* Current http/network operations on **Windigo** client are operated synchronously
+* <del>Current http/network operations on **Windigo** client are operated synchronously</del> **all requests work asynchronously**
 * Library currently in development so check back regularly or star/fork it.  
   
 

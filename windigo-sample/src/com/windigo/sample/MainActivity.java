@@ -25,7 +25,6 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.widget.TextView;
 
@@ -33,9 +32,6 @@ import com.windigo.RestApiFactory;
 import com.windigo.android.windigotest.R;
 import com.windigo.http.HttpClient;
 import com.windigo.http.HttpClientFactory;
-import com.windigo.sample.LastfmRestApi;
-import com.windigo.sample.OpenWeatherApi;
-import com.windigo.sample.lastfm.Response;
 import com.windigo.sample.weather.ForecastResponse;
 import com.windigo.sample.weather.MainResponse;
 import com.windigo.sample.weather.WeatherResponse;
@@ -65,50 +61,20 @@ public class MainActivity extends Activity {
 		openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
 				OpenWeatherApi.class, httpClient);
 		
-		try {
-			// this is windigo request easy and clean
-			//new ForecastTask().execute();
-			//new LastfmTask().execute();
-			
-			// this is regular rest request with bunch of repeatitve code
-			new RegularHttpRestTask().execute();
-		} catch (Exception e) {
-			Log.d(TAG, e.getCause().toString());
-		}
-	}
-	
-	private class LastfmTask extends AsyncTask<Void, Integer, Response> {
-		@Override
-		protected Response doInBackground(Void... params) {
-			return lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", "Cher", "Believe", "json");
-		}
 		
-		@Override
-		protected void onPostExecute(Response result) {
-			super.onPostExecute(result);
-			// use response data however you want
-			// you can access all of the properties easily
-			responseTextView.setText(result.getAlbum().getName());
-		}
-	}
-	
-	
-	private class ForecastTask extends AsyncTask<Void, Integer, ForecastResponse> {
-
-		@Override
-		protected ForecastResponse doInBackground(Void... params) {
-			
-			return openWeatherApi.getForecast(41.163267, 29.094187);
-		}
+		ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
+		responseTextView.setText(forecast.toString());
 		
-		@Override
-		protected void onPostExecute(ForecastResponse result) {
-			super.onPostExecute(result);
-			// use response data however you want
-			// you can access all of the properties easily
-			responseTextView.setText("Completed : " + result.getWind().getSpeed());
-		}
+		
+		//Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", 
+		//		"Cher", "Believe", "json").getAlbum();
+		//responseTextView.setText(album.toString());
+		
+		
+		// old way
+		//new RegularHttpRestTask().execute();
 	}
+	
 	
 	private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
 
