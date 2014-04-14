@@ -17,7 +17,6 @@ package com.windigo;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 
 import android.net.Uri;
@@ -41,16 +39,12 @@ import com.windigo.annotations.Header;
 import com.windigo.annotations.Placeholder;
 import com.windigo.annotations.Post;
 import com.windigo.annotations.QueryParam;
-import com.windigo.annotations.QueryParamsObject;
-import com.windigo.exception.BaseException;
-import com.windigo.exception.HttpCredentialException;
-import com.windigo.exception.HttpEndpointNotFoundException;
-import com.windigo.http.HttpClient;
+import com.windigo.http.BaseHttpClient;
+import com.windigo.http.Request;
+import com.windigo.http.RequestType;
+import com.windigo.http.Response;
 import com.windigo.parsers.ResponseTypeParser;
-import com.windigo.types.RequestType;
-import com.windigo.types.Response;
 import com.windigo.utils.GlobalSettings;
-import com.windigo.utils.StringHelper;
 
 /**
  * @author burakdede
@@ -71,6 +65,8 @@ public class RestMethodMetaDataCache {
 	
 	private Map<Integer, String> queryParams = new HashMap<Integer, String>();
 	
+	private Map<Integer, String> bodyParams = new HashMap<Integer, String>();
+	
 	private Map<Integer, String> placeholderParms = new HashMap<Integer, String>();
 	
 	private Map<Integer, String> headerParams = new HashMap<Integer, String>();
@@ -79,15 +75,11 @@ public class RestMethodMetaDataCache {
 	
 	private Type returnType;
 	
-	private HttpClient httpClient;
-	
-	private int indexOfQueryParamObject;
-	
-	private boolean haveQueryParamObject;
+	private BaseHttpClient httpClient;
 	
 	private ResponseTypeParser<? extends Type> typeParser;
 	
-	public RestMethodMetaDataCache(Method method, HttpClient httpClient) {
+	public RestMethodMetaDataCache(Method method, BaseHttpClient httpClient) {
 		this.httpClient = httpClient;
 		this.method = method;
 		parseMethodMetaData();
@@ -99,7 +91,7 @@ public class RestMethodMetaDataCache {
 	 * to cache and initialize
 	 * 
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void parseMethodMetaData() {
 		if (method.isAnnotationPresent(Get.class)) {
 			requestType = RequestType.GET;
@@ -127,13 +119,12 @@ public class RestMethodMetaDataCache {
 					Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
 					if (annotationType == QueryParam.class) {
 						queryParams.put(i,((QueryParam) parameterAnnotation).value());
-					} else if (annotationType == QueryParamsObject.class) {
-						indexOfQueryParamObject = i;
-						haveQueryParamObject = true;
 					} else if (annotationType == Placeholder.class) {
 						placeholderParms.put(i, ((Placeholder) parameterAnnotation).value());
 					} else if (annotationType == Header.class) {
 						headerParams.put(i, ((Header) parameterAnnotation).value());
+					} else if (annotationType == com.windigo.annotations.Field.class) {
+						bodyParams.put(i, ((com.windigo.annotations.Field) parameterAnnotation).value());
 					}
 				}
 			}
@@ -142,13 +133,14 @@ public class RestMethodMetaDataCache {
 	
 	
 	/**
-	 * Convert query parameters map to {@link NameValuePair} list
+	 * Convert parameters map to {@link NameValuePair} list
 	 * 
 	 * @param queryParams
 	 * @param args
 	 * @return {@link List} of {@link NameValuePair}
 	 */
-	private static NameValuePair[] convertToNameValuePairs(Map<Integer, String> queryParams, Object[] args) {
+	private static List<NameValuePair> convertToNameValuePairs(Map<Integer, String> queryParams, Object[] args) {
+		
 		List<NameValuePair> params = new ArrayList<NameValuePair>();
 		
 		if (queryParams.size() > 0) {			
@@ -161,42 +153,18 @@ public class RestMethodMetaDataCache {
 			}
 		}
 		
-		return params.toArray(new NameValuePair[params.size()]);
+		return params;
+		
 	}
 	
 	
-	/**
-	 * Convert given plain class to query parameters
-	 * for get requests
-	 * 
-	 * @param object
-	 * @throws IllegalAccessException
-	 * @throws IllegalArgumentException
-	 * 
-	 * @return {@link String} of url encoded query params url 
-	 */
-	private String parseQueryParamsObjectString(Object object) 
-			throws IllegalAccessException, IllegalArgumentException {
-		
-		Class<?> paramClass = object.getClass();
-		Field[] fields = paramClass.getDeclaredFields();
-		Map<String, Object> fieldParams = new HashMap<String, Object>();
-
-		for (int i = 0; i < fields.length; i++) {
-			Field field = fields[i];
-			fieldParams.put(field.getName(), field.get(object));
-		}
-		
-		
-        List<String> vals = new ArrayList<String>();
-        for (Map.Entry<String, Object> queryParamEntry : fieldParams.entrySet()) {
-            if (queryParamEntry.getValue() != null) {
-                String value = Uri.encode(queryParamEntry.getValue().toString());
-                vals.add(queryParamEntry.getKey() + "=" + value);
-            }
-        }
-        
-        return StringHelper.join(vals.toArray(), "&");
+	private List<NameValuePair> parseQueryParams(Map<Integer, String> queryParams, Object[] args) {
+		return convertToNameValuePairs(queryParams, args);
+	}
+	
+	
+	private List<NameValuePair> parsePostBodyFieldParams(Map<Integer, String> bodyParams, Object[] args) {
+		return convertToNameValuePairs(bodyParams, args);
 	}
 
 	
@@ -209,7 +177,8 @@ public class RestMethodMetaDataCache {
 	 * @return {@link String}
 	 */
     public String parsePlaceholderParams(String path, Map<Integer, String> pathParams, Object[] args) throws IllegalArgumentException{
-        for (Map.Entry<Integer, String> placeholder : placeholderParms.entrySet()) {
+        
+		for (Map.Entry<Integer, String> placeholder : placeholderParms.entrySet()) {
             Object paramVal = args[placeholder.getKey()];
             if (paramVal == null) {
                 throw new IllegalArgumentException(String.format("Null parameters are not allowed for : [%s]", placeholder.getValue()));
@@ -217,32 +186,34 @@ public class RestMethodMetaDataCache {
             String value = Uri.encode(paramVal.toString());
             path = path.replaceAll("\\{(" + placeholder.getValue() + ")\\}", value);
         }
+		
         return path;
-    }
+    
+	}
     
     
     
     /**
-     * Parse header params to {@link org.apache.http.Header} array
+     * Parse header params to {@link com.windigo.http.Header} list
      * 
      * @param headerParams
      * @param args
-     * @return {@link org.apache.http.Header}
+     * @return {@link List} of {@link com.windigo.http.Header} values
      * @throws IllegalArgumentException
      * 
      */
-    public org.apache.http.Header[] parseHeaderParams(Map<Integer, String> headerParams, Object[] args) throws IllegalArgumentException{
-    	org.apache.http.Header[] headersArray = new org.apache.http.Header[headerParams.size()];
+    public List<com.windigo.http.Header> parseHeaderParams(Map<Integer, String> headerParams, Object[] args) throws IllegalArgumentException{
+
+    	List<com.windigo.http.Header>headers = new ArrayList<com.windigo.http.Header>();
     	
-    	int i = 0;    	
     	for (Map.Entry<Integer, String> header : headerParams.entrySet()) {
 			String headerVal = args[header.getKey()].toString();
-			if (headerVal == null) throw new IllegalArgumentException(String.format("Null header values are not allowed for : [%s]", header.getValue()));
-			headersArray[i] = new BasicHeader(header.getValue(), headerVal);
-			i++;
+			String headerName = header.getValue();
+			headers.add(new com.windigo.http.Header(headerName, headerVal));
 		}
     	
-    	return headersArray;
+    	return headers;
+    	
     }
     
     
@@ -256,33 +227,20 @@ public class RestMethodMetaDataCache {
      * @throws ExecutionException
      * 
      */
-    public HttpResponse makeRequestAsync(final String url, final NameValuePair[] parameters) 
-    		throws InterruptedException, ExecutionException {
+    public Response makeAsyncRequest(final Request request) 
+    		throws IOException, InterruptedException, ExecutionException {
     	
-    	AsyncTask<Void, Integer, HttpResponse> backgroundTask = new AsyncTask<Void, Integer, HttpResponse>() {
+    	AsyncTask<Void, Integer, Response> backgroundTask = new AsyncTask<Void, Integer, Response>() {
+    		Response response;
     		
 			@Override
-			protected HttpResponse doInBackground(Void... params) {
+			protected Response doInBackground(Void... params) {
 				try {
-					switch (requestType) {
-						case GET:
-							return httpClient.doHttpGet(url, parameters);
-						case POST:
-							return httpClient.doHttpPost(url, parameters);
-						default:
-							throw new IllegalStateException("Http method annotation " +
-									"does not exist (Get, Post)");
-					}
-				} catch (HttpCredentialException e) {
-					e.printStackTrace();
-				} catch (HttpEndpointNotFoundException e) {
-					e.printStackTrace();
+					 response = httpClient.execute(request);
 				} catch (IOException e) {
 					e.printStackTrace();
-				} catch (BaseException e) {
-					e.printStackTrace();
 				}
-				return null;
+				return response;
 			}
     		
 		}.execute();
@@ -297,41 +255,44 @@ public class RestMethodMetaDataCache {
 	 * 
 	 * @param baseUrl
 	 * @param args
-	 * @throws HttpCredentialException
-	 * @throws HttpEndpointNotFoundException
 	 * @throws IOException
-	 * @throws BaseException
-	 * @throws IllegalArgumentException 
-	 * @throws IllegalAccessException 
 	 * @throws ExecutionException 
 	 * @throws InterruptedException 
+	 * @throws IllegalArgumentException 
+	 * @throws IllegalAccessException 
 	 */
 	public <T> Object invoke(String baseUrl, Object[] args) 
-			throws HttpCredentialException, HttpEndpointNotFoundException, 
-			IOException, BaseException, IllegalAccessException, IllegalArgumentException, 
-			InterruptedException, ExecutionException {
+			throws IOException, InterruptedException, ExecutionException, 
+			IllegalAccessException, IllegalArgumentException {
 		
-		HttpResponse httpResponse;
 		Response response;
+		Request request = new Request();
 		String fullUrl = baseUrl + requestPath;
+		
+		request.setHttpRequestType(requestType);
+		request.setFullUrl(fullUrl);
 		
 		// have placeholder parameters like http://example.org/user/{id}
 		if (placeholderParms.size() > 0) {
 			fullUrl = parsePlaceholderParams(fullUrl, placeholderParms, args);
 		}
 		
+		// have query parameter values @QueryParam
+		if (queryParams.size() > 0) {
+			request.setQueryParams(parseQueryParams(queryParams, args));
+		}
+		
 		// have headers parameter @Header
 		if (headerParams.size() > 0) {
-			httpClient.setHeaders(parseHeaderParams(headerParams, args));
+			request.setHeaders(parseHeaderParams(headerParams, args));
 		}
 		
-		// have object as query parameter @QueryParamsObject
-		if (haveQueryParamObject) {
-			fullUrl = fullUrl + parseQueryParamsObjectString(args[indexOfQueryParamObject]);
+		// does request have body and its http post
+		if (requestType == RequestType.POST && bodyParams.size() > 0) {
+			request.setBodyParams(parsePostBodyFieldParams(bodyParams, args));
 		}
-		
-		httpResponse = makeRequestAsync(fullUrl, convertToNameValuePairs(queryParams, args));
-		response = new Response(httpResponse);
+
+		response = makeAsyncRequest(request);
 		if (DEBUG && response != null) Log.d(TAG, "Raw response: " + response.getRawString());
 		
 		return typeParser.parse(response.getRawString());

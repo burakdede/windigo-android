@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -30,8 +31,9 @@ import android.widget.TextView;
 
 import com.windigo.RestApiFactory;
 import com.windigo.android.windigotest.R;
-import com.windigo.http.HttpClient;
-import com.windigo.http.HttpClientFactory;
+import com.windigo.http.ApacheHttpClient;
+import com.windigo.http.HttpUrlConnectionClient;
+import com.windigo.http.OkClient;
 import com.windigo.sample.weather.ForecastResponse;
 import com.windigo.sample.weather.MainResponse;
 import com.windigo.sample.weather.WeatherResponse;
@@ -51,25 +53,29 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		responseTextView = (TextView) findViewById(R.id.responseTextView);
 		
-		// we need default http client
-		HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
+		// apache http client bundled with android
+		ApacheHttpClient httpClient = new ApacheHttpClient();
 		
-		// call factory method with url and interface class for rest api
-		lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
+		// android http url connection client
+		HttpUrlConnectionClient httpUrlConnectionClient = new HttpUrlConnectionClient();
+		
+		// square okhttp client
+		OkClient okHttpClient = new OkClient();		
 		
 		// call factory method with url and interface class for rest api		
 		openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-				OpenWeatherApi.class, httpClient);
-		
+				OpenWeatherApi.class, okHttpClient);
 		
 		ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
 		responseTextView.setText(forecast.toString());
 		
 		
+		// call factory method with url and interface class for rest api
+				//lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
+		
 		//Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", 
 		//		"Cher", "Believe", "json").getAlbum();
 		//responseTextView.setText(album.toString());
-		
 		
 		// old way
 		//new RegularHttpRestTask().execute();
@@ -97,14 +103,14 @@ public class MainActivity extends Activity {
 			final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
 	                supportedSchemes);
 			
-			HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
+			HttpClient httpClient = new DefaultHttpClient();
 			HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
 			HttpResponse response = null;
 			ForecastResponse forecast = new ForecastResponse();
 			JSONObject responseJsonObject;
 			
 			try {
-				response =  httpClient.executeHttpRequest(get);
+				response =  httpClient.execute(get);
 				String responseString = EntityUtils.toString(response.getEntity());
 				responseJsonObject = new JSONObject(responseString);
 				

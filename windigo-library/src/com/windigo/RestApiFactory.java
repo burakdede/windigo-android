@@ -24,7 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.windigo.annotations.Get;
 import com.windigo.annotations.Post;
 import com.windigo.annotations.RestApi;
-import com.windigo.http.HttpClient;
+import com.windigo.http.BaseHttpClient;
+import com.windigo.http.ApacheHttpClient;
 
 /**
  * @author burakdede
@@ -34,15 +35,13 @@ import com.windigo.http.HttpClient;
  */
 public class RestApiFactory {
 	
-	private static final String TAG = RestApiFactory.class.getCanonicalName();
-	
 	private static final ConcurrentHashMap<String, Object> cachedServices = 
 			new ConcurrentHashMap<String, Object>();
 	private static final ConcurrentHashMap<Method, RestMethodMetaDataCache> cachedMethodMetaData = 
 			new ConcurrentHashMap<Method, RestMethodMetaDataCache>();
 
 	@SuppressWarnings("unchecked")
-	public static <T> T createNewService(String apiEndpointUrl, Class<T> restServiceClass, HttpClient client) {
+	public static <T> T createNewService(String apiEndpointUrl, Class<T> restServiceClass, BaseHttpClient client) {
 		T service;
 		
 		if (restServiceClass.isAnnotationPresent(RestApi.class)) {
@@ -70,9 +69,9 @@ public class RestApiFactory {
 	 * Initialize method meta data cache for every method
 	 * 
 	 * @param restServiceClass {@link T}
-	 * @param client {@link HttpClient}
+	 * @param client {@link ApacheHttpClient}
 	 */
-	private static void setupMethodMetaDataCache(Class<?> restServiceClass, HttpClient httpClient) {
+	private static void setupMethodMetaDataCache(Class<?> restServiceClass, BaseHttpClient httpClient) {
 		for (Method method : restServiceClass.getMethods()) {
 			if (method.isAnnotationPresent(Get.class) || method.isAnnotationPresent(Post.class)) {
 				cachedMethodMetaData.putIfAbsent(method, new RestMethodMetaDataCache(method, httpClient));

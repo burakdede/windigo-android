@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.utils;
+package com.windigo.logging;
+
+import android.util.Log;
 
 /**
  * @author burakdede
- * 
- * Global library related settings logging, profiling etc.
+ *
+ * Some logging utilities
  */
-public class GlobalSettings {
-	public static boolean DEBUG = true;
-	public static int CONNNECTION_TIMEOUT = 60 * 1000;
-	public static int CONNECTION_READ_TIMEOUT = 60 * 1000;
+public class Logger {
+	
+	public static <T> void log(Class<T> instance, String message) {
+		Log.d(instance.getCanonicalName(), message);
+	}
+	
+	public static <T> void log(Class<T> instance, String message, Exception e) {
+		Log.d(instance.getName(), message);
+		e.printStackTrace();
+	}
 }

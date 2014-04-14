@@ -18,6 +18,8 @@
 # Whats New
 
 * Current operations working on asynchronously thanks to AsyncTask code will be much cleaner.
+* Choose your http client **Windigo** works with most of them. Currently support Apache HttpClient, HttpUrlConnectionClient and Square's OkHttpClient 
+* Removed annotation support for **QueryObjectParam** which let you map POJO to request parameters.
 
 
 # How it works
@@ -28,6 +30,7 @@ Here is simple example.
  
 
 ### 1. Define your remote api with simple interface
+
 ```java
 @RestApi
 public interface LastfmRestApi {
@@ -38,6 +41,7 @@ public interface LastfmRestApi {
 ```
 
 another one
+
 ```java
 @RestApi
 public interface OpenWeatherApi {
@@ -47,22 +51,36 @@ public interface OpenWeatherApi {
 }
 ```
 ### 2. Create http client from factory method with simple one liner
-```java
-// we need default http client
-HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
 
+```java
+// choose whichever http client suits you best. Windigo works with the following there http client.
+
+// apache http client bundled with android
+ApacheHttpClient httpClient = new ApacheHttpClient();
+
+// android http url connection client
+HttpUrlConnectionClient httpUrlConnectionClient = new HttpUrlConnectionClient();
+
+// square okhttp client
+OkClient okHttpClient = new OkClient();
 ```
+
 ### 3. Instantiate your rest api interface
+
 ```java
 // call factory method with url and interface class for rest api
 lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
 ```	
+
 ### 4. Start calling your rest methods
+
 ```java
 // get type safe response directly
 Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", "Cher", "Believe", "json");
 ```	
+
 # Download
+
 Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).  
 
 # Before & After
@@ -191,13 +209,7 @@ Used as parameter, indicates the parameters send with request, does not matter g
 // /weather?lat=x&lng=y
 @Get("/weather")
 Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
-```	
-### @QueryParamsObject
-Used as parameter, send plain object as query parameter by mapping every field
-```java	
-@Get("/user/update")
-User updateUser(@QueryParamsObject User user)
-```	  
+```		  
 	  
 # Beware
 * <del>Current http/network operations on **Windigo** client are operated synchronously</del> **all requests work asynchronously**
@@ -209,8 +221,8 @@ Only dependency windigo needs is [google gson](https://code.google.com/p/google-
 
 
 # Roadmap
-* Replace OkHttp with HttpClient
-* Optional asynchronous requests with callbacks
+* <del>Replace OkHttp with HttpClient</del> Let developers choose which http client library to use (okhttp, httpclient etc.)
+* <del>Optional asynchronous requests with callbacks</del>
 * Response caching
 * Advanced logging and profiling for requests
 * Detailed exception and error handling  

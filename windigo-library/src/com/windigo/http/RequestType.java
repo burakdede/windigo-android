@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.annotations;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.windigo.http;
 
 /**
  * @author burakdede
  *
- * Annotation for sending plain java objects
  */
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface QueryParamsObject {
-	
+public enum RequestType {
+	//TODO: Add other methods too
+	GET, POST
 }

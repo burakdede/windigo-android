@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.utils;
+package com.windigo.http;
+
+import java.io.IOException;
+
 
 /**
  * @author burakdede
  * 
- * Global library related settings logging, profiling etc.
+ * Base http client interface
+ * 
  */
-public class GlobalSettings {
-	public static boolean DEBUG = true;
-	public static int CONNNECTION_TIMEOUT = 60 * 1000;
-	public static int CONNECTION_READ_TIMEOUT = 60 * 1000;
+public interface BaseHttpClient {
+
+	Response execute(Request request) throws IOException;
 }
