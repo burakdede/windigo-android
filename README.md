@@ -9,7 +9,7 @@
 ###**Windigo**, is easy to use type-safe rest/http client for android and *android developers*.  
 
 
-* **Windigo** includes ***default http client*** (apache http client) free you from writing same http client creation code. Currently includes most used http operations out of box with default configurations.
+* **Windigo** <del>includes ***default http client*** (apache http client)</del> free you from writing same http client creation code. Currently includes most used http operations out of box with default configurations.
 
 * **Windigo** allows you create your remote api's with declerative syntax. Use various annotations and create your remote api with simple java interface file.
 
