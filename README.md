@@ -223,6 +223,9 @@ Only dependency windigo needs is [google gson](https://code.google.com/p/google-
 # Roadmap
 * <del>Replace OkHttp with HttpClient</del> Let developers choose which http client library to use (okhttp, httpclient etc.)
 * <del>Optional asynchronous requests with callbacks</del>
+* Let developer choose whether to get response stream or actual raw respose string
+* HttpUrlConnectionClient http-https follow problem
+* Cookie support for clients
 * Response caching
 * Advanced logging and profiling for requests
 * Detailed exception and error handling  
