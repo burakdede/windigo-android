@@ -20,13 +20,15 @@
 * Current operations working on asynchronously thanks to AsyncTask code will be much cleaner.
 * Choose your http client **Windigo** works with most of them. Currently support Apache HttpClient, HttpUrlConnectionClient and Square's OkHttpClient 
 * Removed annotation support for **QueryObjectParam** which let you map POJO to request parameters.
+* Cookie support for http clients
+* Faster response handling with streams, removed raw response memory footprint.
 
 
 # How it works
 
 Here is simple example.  
 
-[Technical Into](http://blog.burakdede.com/windigo-intro-for-contributors/)
+[Technical Intro - Old code base](http://blog.burakdede.com/windigo-intro-for-contributors/)
  
 
 ### 1. Define your remote api with simple interface
@@ -176,7 +178,7 @@ private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastRespo
 ```
 
 # Windigo Annotations
-### RestApi
+### @RestApi
 Use with interface, indicates its a rest api interface
 ```java
 @RestApi
@@ -217,7 +219,10 @@ Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double ln
   
 
 # Dependencies
-Only dependency windigo needs is [google gson](https://code.google.com/p/google-gson/) library. Its used for type conversion, no need to reinvent the wheel and writing all conversion code again.  
+<del>Only dependency windigo needs is [google gson](https://code.google.com/p/google-gson/) library</del>
+
+* [google gson](https://code.google.com/p/google-gson/) 
+* supports [square/okhttp](https://github.com/square/okhttp) so its jar also included
 
 
 # Roadmap
@@ -225,7 +230,7 @@ Only dependency windigo needs is [google gson](https://code.google.com/p/google-
 * <del>Optional asynchronous requests with callbacks</del>
 * Let developer choose whether to get response stream or actual raw respose string
 * HttpUrlConnectionClient http-https follow problem
-* Cookie support for clients
+* <del>Cookie support for clients</del>
 * Response caching
 * Advanced logging and profiling for requests
 * Detailed exception and error handling  
