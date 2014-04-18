@@ -18,6 +18,8 @@ package com.windigo.http.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.CookieHandler;
+import java.net.CookieManager;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -253,7 +255,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 	}
 	
 	
-	public Response handleHttpResponse(HttpResponse httpResponse) throws IOException {
+	private Response handleHttpResponse(HttpResponse httpResponse) throws IOException {
 		
 		int statusCode = httpResponse.getStatusLine().getStatusCode();
 		InputStream contentStream = httpResponse.getEntity().getContent();
@@ -303,6 +305,18 @@ public class ApacheHttpClient implements BaseHttpClient {
 		}
 		
 	}
+	
+	
+	/**
+	 * Handle cookies with cookie-handler
+	 * 
+	 */
+	private void setupCookieManager() {
+		
+		CookieManager cookieManager = new CookieManager();
+		CookieHandler.setDefault(cookieManager);
+		
+	}
 
 
 	@Override
@@ -310,6 +324,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 		
 		Response response = null;
 		headers = com.windigo.http.Header.convertToApacheHeaders(request.getHeaders());
+		setupCookieManager();
 		
 		switch (request.getHttpRequestType()) {
 			case GET:

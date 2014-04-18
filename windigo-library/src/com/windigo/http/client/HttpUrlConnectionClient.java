@@ -23,6 +23,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.CookieHandler;
+import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -57,9 +59,9 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	public Response execute(Request request) throws IOException {
 		
 		if (request == null) throw new IllegalArgumentException("Request can not be null");
-		
 		Logger.log(HttpUrlConnectionClient.class, request.toString());
 		
+		setupCookieManager();
 		connection = openHttpURLConnection(request);
 		setupHttpUrlConnectionClient(connection, request);
 		
@@ -67,6 +69,26 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		
 	}
 	
+	
+	/**
+	 * Handle cookies with cookie-handler
+	 * 
+	 */
+	private void setupCookieManager() {
+		
+		CookieManager cookieManager = new CookieManager();
+		CookieHandler.setDefault(cookieManager);
+		
+	}
+	
+	/**
+	 * Open http url connection to url and return connection
+	 * 
+	 * @param request
+	 * @return {@link HttpURLConnection}
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	protected HttpURLConnection openHttpURLConnection(Request request) 
 			throws MalformedURLException, IOException {
 		
@@ -145,6 +167,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	
 	/**
 	 * Buffer input stream and read
+	 *
 	 * 
 	 * @param is
 	 * @return {@link String} response
