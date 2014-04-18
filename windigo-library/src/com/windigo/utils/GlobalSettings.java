@@ -24,4 +24,5 @@ public class GlobalSettings {
 	public static boolean DEBUG = true;
 	public static int CONNNECTION_TIMEOUT = 60 * 1000;
 	public static int CONNECTION_READ_TIMEOUT = 60 * 1000;
+	public final static String CHARSET = "utf-8"; 
 }

@@ -30,6 +30,10 @@ public class BaseException extends Exception {
 		super(message);
 	}
 	
+	public BaseException(Throwable throwable) {
+		super(throwable);
+	}
+	
 	public BaseException(String message, String extra) {
 		super(message);
 		mExtra = extra;

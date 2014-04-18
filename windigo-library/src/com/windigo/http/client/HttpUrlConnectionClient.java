@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.http;
+package com.windigo.http.client;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -34,6 +34,9 @@ import java.util.Map;
 
 import org.apache.http.NameValuePair;
 
+import com.windigo.http.Header;
+import com.windigo.http.Request;
+import com.windigo.http.Response;
 import com.windigo.logging.Logger;
 import com.windigo.utils.GlobalSettings;
 
@@ -132,20 +135,22 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 			is = connection.getInputStream();
 		}
 		
-		String rawString = readResponseStream(is);
+		//TODO: remove raw string response along project
+		//String rawString = readResponseStream(is);
 		
-		return new Response(statusCode, rawString, reason, headers);
+		return new Response(statusCode, reason, headers, is);
 		
 	}
 	
 	
 	/**
-	 * Takes response input stream, buffer it and read
+	 * Buffer input stream and read
 	 * 
 	 * @param is
 	 * @return {@link String} response
 	 * @throws IOException
 	 */
+	@Deprecated
 	private String readResponseStream(InputStream is) throws IOException {
 		
 		StringBuffer response = new StringBuffer();

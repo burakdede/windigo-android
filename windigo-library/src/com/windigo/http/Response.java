@@ -15,7 +15,11 @@
  */
 package com.windigo.http;
 
+import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.List;
+
+import com.windigo.parsers.ResponseTypeParser;
 
 
 /**
@@ -26,59 +30,55 @@ import java.util.List;
  */
 public final class Response {
 
-	private int httpStatusCode;
-	
-	private String rawString;
+	private int statusCode;
 	
 	private String reason;
 	
 	private List<Header> headers;
 	
-	public Response(int httpStatusCode, String rawString, String reason, List<Header> headers) {
-		this.httpStatusCode = httpStatusCode;
-		this.rawString = rawString;
+	private InputStream contentStream;
+	
+	private ResponseTypeParser<? extends Type> contentParser;
+
+	/**
+	 * Create new response wrapper
+	 * 
+	 * @param httpStatusCode http status codwe
+	 * @param content actual response
+	 * @param reason store data about error
+	 * @param headers response header list
+	 * @param contentStream response stream object
+	 */
+	public Response(int httpStatusCode, String reason, 
+			List<Header> headers, InputStream contentStream) {
+		this.statusCode = httpStatusCode;
 		this.reason = reason;
 		this.headers = headers;
+		this.contentStream = contentStream;
 	}
-	
+
+	public void setContentParser(ResponseTypeParser<? extends Type> contentParser) {
+		this.contentParser = contentParser;
+	}
+
+	public InputStream getContentStream() {
+		return contentStream;
+	}
 
 	public int getHttpStatusCode() {
-		return httpStatusCode;
+		return statusCode;
 	}
-
 
 	public void setHttpStatusCode(int httpStatusCode) {
-		this.httpStatusCode = httpStatusCode;
+		this.statusCode = httpStatusCode;
 	}
-
-
-	public String getRawString() {
-		return rawString;
-	}
-
-
-	public void setRawString(String rawString) {
-		this.rawString = rawString;
-	}
-
 
 	public String getReason() {
 		return reason;
 	}
 
-
-	public void setReason(String reason) {
-		this.reason = reason;
-	}
-
-
 	public List<Header> getHeaders() {
 		return headers;
-	}
-
-
-	public void setHeaders(List<Header> headers) {
-		this.headers = headers;
 	}
 	
 }

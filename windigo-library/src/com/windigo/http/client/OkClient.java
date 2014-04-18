@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.http;
+package com.windigo.http.client;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.windigo.http.Request;
 import com.windigo.utils.GlobalSettings;
 
 /**

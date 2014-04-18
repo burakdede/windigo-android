@@ -31,9 +31,9 @@ import android.widget.TextView;
 
 import com.windigo.RestApiFactory;
 import com.windigo.android.windigotest.R;
-import com.windigo.http.ApacheHttpClient;
-import com.windigo.http.HttpUrlConnectionClient;
-import com.windigo.http.OkClient;
+import com.windigo.http.client.ApacheHttpClient;
+import com.windigo.http.client.HttpUrlConnectionClient;
+import com.windigo.http.client.OkClient;
 import com.windigo.sample.weather.ForecastResponse;
 import com.windigo.sample.weather.MainResponse;
 import com.windigo.sample.weather.WeatherResponse;
@@ -64,11 +64,10 @@ public class MainActivity extends Activity {
 		
 		// call factory method with url and interface class for rest api		
 		openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-				OpenWeatherApi.class, okHttpClient);
+				OpenWeatherApi.class, httpClient);
 		
 		ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
 		responseTextView.setText(forecast.toString());
-		
 		
 		// call factory method with url and interface class for rest api
 				//lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);

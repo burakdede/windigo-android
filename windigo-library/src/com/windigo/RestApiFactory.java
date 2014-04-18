@@ -24,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.windigo.annotations.Get;
 import com.windigo.annotations.Post;
 import com.windigo.annotations.RestApi;
-import com.windigo.http.BaseHttpClient;
-import com.windigo.http.ApacheHttpClient;
+import com.windigo.http.client.ApacheHttpClient;
+import com.windigo.http.client.BaseHttpClient;
 
 /**
  * @author burakdede

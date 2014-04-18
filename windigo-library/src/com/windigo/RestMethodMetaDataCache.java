@@ -39,10 +39,11 @@ import com.windigo.annotations.Header;
 import com.windigo.annotations.Placeholder;
 import com.windigo.annotations.Post;
 import com.windigo.annotations.QueryParam;
-import com.windigo.http.BaseHttpClient;
+import com.windigo.exception.JsonConversionException;
 import com.windigo.http.Request;
 import com.windigo.http.RequestType;
 import com.windigo.http.Response;
+import com.windigo.http.client.BaseHttpClient;
 import com.windigo.parsers.ResponseTypeParser;
 import com.windigo.utils.GlobalSettings;
 
@@ -260,10 +261,11 @@ public class RestMethodMetaDataCache {
 	 * @throws InterruptedException 
 	 * @throws IllegalArgumentException 
 	 * @throws IllegalAccessException 
+	 * @throws JsonConversionException 
 	 */
 	public <T> Object invoke(String baseUrl, Object[] args) 
 			throws IOException, InterruptedException, ExecutionException, 
-			IllegalAccessException, IllegalArgumentException {
+			IllegalAccessException, IllegalArgumentException, JsonConversionException {
 		
 		Response response;
 		Request request = new Request();
@@ -293,9 +295,13 @@ public class RestMethodMetaDataCache {
 		}
 
 		response = makeAsyncRequest(request);
-		if (DEBUG && response != null) Log.d(TAG, "Raw response: " + response.getRawString());
+		//TODO: would be good if we can set parser at response constructor
+		response.setContentParser(typeParser);
 		
-		return typeParser.parse(response.getRawString());
+		//TODO: remove raw response along project
+		//if (DEBUG && response != null) Log.d(TAG, "Raw response: " + response.getRawString());
+		
+		return typeParser.parse(response.getContentStream());
 		
 	}
 }

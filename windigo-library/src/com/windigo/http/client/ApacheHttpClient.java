@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.http;
+package com.windigo.http.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,8 @@ import android.util.Log;
 import com.windigo.exception.BaseException;
 import com.windigo.exception.HttpCredentialException;
 import com.windigo.exception.HttpEndpointNotFoundException;
+import com.windigo.http.Request;
+import com.windigo.http.Response;
 import com.windigo.utils.GlobalSettings;
 import com.windigo.utils.StringHelper;
 
@@ -253,47 +256,50 @@ public class ApacheHttpClient implements BaseHttpClient {
 	public Response handleHttpResponse(HttpResponse httpResponse) throws IOException {
 		
 		int statusCode = httpResponse.getStatusLine().getStatusCode();
+		InputStream contentStream = httpResponse.getEntity().getContent();
 		Log.d(TAG, "Status code : " + statusCode);
 		
 		switch (statusCode) {
 			case 200:
 				// everything ok
-				String rawString = EntityUtils.toString(httpResponse.getEntity());
+				//TODO: remove raw strings alongp project
+				//String content = EntityUtils.toString(httpResponse.getEntity());
 				return new Response(statusCode, 
-									rawString, 
 									StringHelper.EMPTY, 
-									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()));
+									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()),
+									contentStream);
+				
 			case 401:
 				// authorization problem
 				httpResponse.getEntity().consumeContent();
 				return new Response(statusCode,
-									StringHelper.EMPTY,
 									httpResponse.getStatusLine().toString(),
-									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()));
+									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()),
+									contentStream);
 				
 			case 404:
 				// endpoint does not exist
 				httpResponse.getEntity().consumeContent();
 				return new Response(statusCode,
-									StringHelper.EMPTY, 
 									httpResponse.getStatusLine().toString(), 
-									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()));
+									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()),
+									contentStream);
 				
 			case 500:
 				// service down
 				httpResponse.getEntity().consumeContent();
 				return new Response(statusCode,
-									StringHelper.EMPTY, 
 									httpResponse.getStatusLine().toString(), 
-									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()));
+									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()),
+									contentStream);
 				
 			default:
 				// generic exception
 				httpResponse.getEntity().consumeContent();
 				return new Response(statusCode,
-									StringHelper.EMPTY, 
 									httpResponse.getStatusLine().toString(), 
-									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()));
+									com.windigo.http.Header.convertFromApacheHeaders(httpResponse.getAllHeaders()),
+									contentStream);
 		}
 		
 	}

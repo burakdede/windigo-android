@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.windigo.http;
+package com.windigo.http.client;
 
 import java.io.IOException;
+
+import com.windigo.http.Request;
+import com.windigo.http.Response;
 
 
 /**
