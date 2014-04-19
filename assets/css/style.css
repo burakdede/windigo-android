@@ -91,8 +91,8 @@ header{
   display: block;	
   <!-- background: url(../img/logo.png) no-repeat; -->
   background-position:center;
-  width: 753px; 
-  height: 408px;
+  <!-- width: 753px; -->
+  <!-- height: 408px; -->
   text-indent: -9999px;
   margin: 30px auto;
   -moz-background-size:cover; 

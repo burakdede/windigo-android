@@ -1,9 +1,9 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Windigo (beta) | type-safe rest client for android</title>
+        <title>Windigo (alpha) | type-safe rest client for android</title>
         <meta name="Description" content="Windigo type-safe rest client for android. Develop your next rest api consuming android app like a boss.">
-        <meta name="Keywords" content="android, rest, api, client, type-safe, apachehttpclient, httpurlconnection, okhttpclient">
+        <meta name="Keywords" content="android, rest, api, client, type-safe, apachehttpclient, httpurlconnection, okhttpclient, library, jar, java, httpclient">
         <meta name="author" content="madebyraj">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Styles -->
@@ -37,6 +37,9 @@
         
         <header class="masthead">
             <div class="container">
+                <br/><br/>
+                <h1 class="font-bree-serif">Windigo type-safe rest client for android</h1>
+                <p class="font-open-sans-normal">Develop your next rest api consuming android app like a boss.</p>
                 <div id="brand">
                     <pre>
                     <code class="language-java">
@@ -47,20 +50,17 @@
     lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
 
     // call factory method with url and interface class for rest api        
-    openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-                                                        OpenWeatherApi.class, httpClient);
+    openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", OpenWeatherApi.class, httpClient);
 
     // this is asynchronous operation
     ForecastpResponse forecast  = openWeatherApi.getForecast(41.163267, 29.094187);
                     </code>
                     </pre>
                 </div>
-                <h1 class="font-bree-serif">Windigo type-safe rest client for android</h1>
-                <p class="font-open-sans-normal">Develop your next rest api consuming android app like a boss.</p>
-                <p class="jumbo"> <a href="http://bit.ly/windigo-github" class="btn btn-default btn-large font-open-sans-normal"><strong>View Windigo on GitHub</strong></a> <a href="http://bit.ly/windigo-jar" class="btn btn-success btn-large font-open-sans-normal"><strong>Download Jar </strong><small>(beta)</small></a> </p>
+                <p class="jumbo"> <a href="http://bit.ly/windigo-github" class="btn btn-default btn-large font-open-sans-normal"><strong>View Windigo on GitHub</strong></a> <a href="http://bit.ly/windigo-jar" class="btn btn-success btn-large font-open-sans-normal"><strong>Download Jar </strong><small>(alpha)</small></a> </p>
                 <p class="share">
                     <a href="https://twitter.com/burakdede" class="twitter-follow-button" data-show-count="false">Follow @burakdede</a>
-<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+                    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
                 </p>
             </div>
             <!--end container-->  
@@ -225,6 +225,7 @@ Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double ln
                                                 <li><del>Cookie support</del></li>
                                                 <li>Response caching</li>
                                                 <li>Advanced logging and profiling for requests</li>
+                                                <li>Maven and gradle support</li>
                                                 <li>Detailed exception and error handling</li>
                                             </ul>
                                         </p>
