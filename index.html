@@ -201,7 +201,84 @@ Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double ln
                                         <h1 class="font-bree-serif">Sample Code</h1>
                                         <p>You can have a look at sample apps that use windigo</p>
                                         <a href="https://github.com/burakdd/windigo/tree/master/windigo-sample">Sample Apps</a>
-                                    </section>                            
+                                    </section> 
+                                    <section class="sec-header">
+                                        <h1 class="font-bree-serif">Do I Need This?</h1>
+                                        <p>If you think you dont need this library, take a look at amount of code you have to write in order to get simple forecast response. Its time consuming and make your application less readable. Do you want to make your code base this complex while you can do it with 4-5 line?</p>
+                                            <pre>
+                                                <code class="language-java">
+private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
+
+	@Override
+	protected ForecastResponse doInBackground(Void... params) {
+		
+		final HttpParams httpParams = new BasicHttpParams();
+		
+        final SchemeRegistry supportedSchemes = new SchemeRegistry();
+
+        final SocketFactory sf = PlainSocketFactory.getSocketFactory();
+        supportedSchemes.register(new Scheme("http", sf, 80));
+        supportedSchemes.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+		
+		HttpConnectionParams.setStaleCheckingEnabled(httpParams, false);
+		HttpConnectionParams.setConnectionTimeout(httpParams, 60 * 1000);
+		HttpConnectionParams.setSoTimeout(httpParams, 60 * 1000);
+		HttpConnectionParams.setSocketBufferSize(httpParams, 8192);
+		
+		final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
+                supportedSchemes);
+		
+		HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
+		HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
+		HttpResponse response = null;
+		ForecastResponse forecast = new ForecastResponse();
+		JSONObject responseJsonObject;
+		
+		try {
+			response =  httpClient.executeHttpRequest(get);
+			String responseString = EntityUtils.toString(response.getEntity());
+			responseJsonObject = new JSONObject(responseString);
+			
+			forecast.setName(responseJsonObject.getString("name"));
+			
+			// get main response
+			JSONObject mainJsonObject = responseJsonObject.getJSONObject("main");
+			forecast.setMain(new MainResponse(mainJsonObject.getDouble("temp"), 
+										mainJsonObject.getDouble("temp_min"), 
+										mainJsonObject.getDouble("temp_max"), 
+										mainJsonObject.getInt("humidity")));
+			
+			// get wind respose
+			JSONObject windJsonObject = responseJsonObject.getJSONObject("wind");
+			forecast.setWind(new WindResponse((float) windJsonObject.getDouble("speed")));
+			
+			JSONArray weathJsonArray = responseJsonObject.getJSONArray("weather");
+			List<WeatherResponse> weatherResponses = new ArrayList<WeatherResponse>();
+			for (int i = 0; i < weathJsonArray.length(); i++) {
+				JSONObject weatherJsonObject = weathJsonArray.getJSONObject(i);
+				weatherResponses.add(new WeatherResponse(weatherJsonObject.getString("description"), weatherJsonObject.getString("icon")));
+			}
+			forecast.setWeather(weatherResponses);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+		
+		return forecast;
+	}
+	
+	@Override
+	protected void onPostExecute(ForecastResponse result) {
+		super.onPostExecute(result);
+		responseTextView.setText(result.toString());
+	}
+}
+                                                </code>
+                                            </pre> 
+                                    </section>                                        
                                     <section class="sec-header">
                                         <h1 class="font-bree-serif">Dependencies</h1>
                                         <p>Windigo depend on following libraries</p>
@@ -240,6 +317,7 @@ Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double ln
                                         <p>Windigo distributed with Apache 2.0 License</p>
                                         <pre>
                                             <code class="language-java">
+Copyright (C) Burak Dede.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -274,7 +352,7 @@ limitations under the License.
             <div class="container">
                 <div class="row">
                     <div class="span6">
-                        <p>© Burak Dede 2014</p>
+                        <p>© <a href="http://blog.burakdede.com">Burak Dede</a> 2014</p>
                     </div>
                     <div class="span2 offset4">
                         <p><a href="#" id="top">Go To Top</a></p>
