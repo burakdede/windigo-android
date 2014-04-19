@@ -4,12 +4,14 @@
 
 > In movie The Lone Ranger, Tonto claims to be the last **Windigo** Hunter of the Comanche and is adamant that Butch Cavendish is a **Windigo***.  
 
-# Overview
-
-###**Windigo**, is easy to use type-safe rest/http client for android and *android developers*.  
+###**Windigo**, is easy to use type-safe rest/http client for android and *android developers*. 
 
 
-* **Windigo** <del>includes ***default http client*** (apache http client)</del> free you from writing same http client creation code. Currently includes most used http operations out of box with default configurations.
+# Documentation
+
+Refer to **[documentation site](http://burakdd.github.io/windigo/)** for more info.
+
+* **Windigo** free you from writing same http client creation code. Currently includes most used http clients out of box with default configurations.
 
 * **Windigo** allows you create your remote api's with declerative syntax. Use various annotations and create your remote api with simple java interface file.
 
@@ -17,212 +19,15 @@
 
 # Whats New
 
-* Current operations working on asynchronously thanks to AsyncTask code will be much cleaner.
+* Current operations working on asynchronously.
 * Choose your http client **Windigo** works with most of them. Currently support Apache HttpClient, HttpUrlConnectionClient and Square's OkHttpClient 
 * Removed annotation support for **QueryObjectParam** which let you map POJO to request parameters.
 * Cookie support for http clients
 * Faster response handling with streams, removed raw response memory footprint.
 
-
-# How it works
-
-Here is simple example.  
-
-[Technical Intro - Old code base](http://blog.burakdede.com/windigo-intro-for-contributors/)
- 
-
-### 1. Define your remote api with simple interface
-
-```java
-@RestApi
-public interface LastfmRestApi {
-
-	@Get("/2.0/")
-	Response getAlbumInfo(@QueryParam("method") String method, @QueryParam("api_key") String api_key, ...);
-}
-```
-
-another one
-
-```java
-@RestApi
-public interface OpenWeatherApi {
-
-	@Get("/weather")
-	ForecastResponse getForecast(@QueryParam("lat") double latitude, @QueryParam("lon") double longtiude);
-}
-```
-### 2. Create http client from factory method with simple one liner
-
-```java
-// choose whichever http client suits you best. Windigo works with the following there http client.
-
-// apache http client bundled with android
-ApacheHttpClient httpClient = new ApacheHttpClient();
-
-// android http url connection client
-HttpUrlConnectionClient httpUrlConnectionClient = new HttpUrlConnectionClient();
-
-// square okhttp client
-OkClient okHttpClient = new OkClient();
-```
-
-### 3. Instantiate your rest api interface
-
-```java
-// call factory method with url and interface class for rest api
-lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
-```	
-
-### 4. Start calling your rest methods
-
-```java
-// get type safe response directly
-Album album = lastfmRestApi.getAlbumInfo("album.getinfo", "49f6b21cab1c48100ee59f216645275e", "Cher", "Believe", "json");
-```	
-
 # Download
 
-Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).  
-
-# Before & After
-
-###With windigo its easy and clean.
-
-```java	
-// we need default http client
-HttpClient httpClient = HttpClientFactory.getDefaultHttpClient();
-	
-// call factory method with url and interface class for rest api
-lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
-	
-// call factory method with url and interface class for rest api		
-openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-			OpenWeatherApi.class, httpClient);
-// this is asynchronous operation
-ForecastpResponse forecast	= openWeatherApi.getForecast(41.163267, 29.094187);
-```
-
-###Without windigo library simple request like this gets out of your hand and becomes complicated.
-
-```java
-private class RegularHttpRestTask extends AsyncTask<Void, Integer, ForecastResponse> {
-
-	@Override
-	protected ForecastResponse doInBackground(Void... params) {
-		
-		final HttpParams httpParams = new BasicHttpParams();
-		
-        final SchemeRegistry supportedSchemes = new SchemeRegistry();
-
-        final SocketFactory sf = PlainSocketFactory.getSocketFactory();
-        supportedSchemes.register(new Scheme("http", sf, 80));
-        supportedSchemes.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
-		
-		HttpConnectionParams.setStaleCheckingEnabled(httpParams, false);
-		HttpConnectionParams.setConnectionTimeout(httpParams, 60 * 1000);
-		HttpConnectionParams.setSoTimeout(httpParams, 60 * 1000);
-		HttpConnectionParams.setSocketBufferSize(httpParams, 8192);
-		
-		final ClientConnectionManager ccm = new ThreadSafeClientConnManager(httpParams,
-                supportedSchemes);
-		
-		HttpClient httpClient = new HttpClient(new DefaultHttpClient(ccm, httpParams));
-		HttpGet get = new HttpGet("http://api.openweathermap.org/data/2.5/weather?lat=41.163267&lon=29.094187");
-		HttpResponse response = null;
-		ForecastResponse forecast = new ForecastResponse();
-		JSONObject responseJsonObject;
-		
-		try {
-			response =  httpClient.executeHttpRequest(get);
-			String responseString = EntityUtils.toString(response.getEntity());
-			responseJsonObject = new JSONObject(responseString);
-			
-			forecast.setName(responseJsonObject.getString("name"));
-			
-			// get main response
-			JSONObject mainJsonObject = responseJsonObject.getJSONObject("main");
-			forecast.setMain(new MainResponse(mainJsonObject.getDouble("temp"), 
-										mainJsonObject.getDouble("temp_min"), 
-										mainJsonObject.getDouble("temp_max"), 
-										mainJsonObject.getInt("humidity")));
-			
-			// get wind respose
-			JSONObject windJsonObject = responseJsonObject.getJSONObject("wind");
-			forecast.setWind(new WindResponse((float) windJsonObject.getDouble("speed")));
-			
-			JSONArray weathJsonArray = responseJsonObject.getJSONArray("weather");
-			List<WeatherResponse> weatherResponses = new ArrayList<WeatherResponse>();
-			for (int i = 0; i < weathJsonArray.length(); i++) {
-				JSONObject weatherJsonObject = weathJsonArray.getJSONObject(i);
-				weatherResponses.add(new WeatherResponse(weatherJsonObject.getString("description"), weatherJsonObject.getString("icon")));
-			}
-			forecast.setWeather(weatherResponses);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		
-		
-		return forecast;
-	}
-	
-	@Override
-	protected void onPostExecute(ForecastResponse result) {
-		super.onPostExecute(result);
-		responseTextView.setText(result.toString());
-	}
-}
-```
-
-# Windigo Annotations
-### @RestApi
-Use with interface, indicates its a rest api interface
-```java
-@RestApi
-public interface YourApiInterface
-```	
-### @Get
-Use with methods, indicates its a get request
-```java
-@Get("/weather")
-```
-### @Post
-Used with methods, indicates its a post request
-```java
-@Post("/user/new")
-```	
-### @Header
-Used as parameter, give headers you want to send with http request.
-```java
-User getUser(@Header("X-Auth") String token, @Header("Accept-Encoding") String encoding)
-```	
-### @Placeholder
-Used as parameter, replaces placeholder given with endpoint
-```java
-Get("/artist/{id}")
-Artist getArtist(@PlaceHolder("id") int id)
-```		
-### @QueryParam
-Used as parameter, indicates the parameters send with request, does not matter get or post
-```java
-// /weather?lat=x&lng=y
-@Get("/weather")
-Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
-```		  
-	  
-# Beware
-* <del>Current http/network operations on **Windigo** client are operated synchronously</del> **all requests work asynchronously**
-* Library currently in development so check back regularly or star/fork it.  
-  
-
-# Dependencies
-<del>Only dependency windigo needs is [google gson](https://code.google.com/p/google-gson/) library</del>
-
-* [google gson](https://code.google.com/p/google-gson/) 
-* supports [square/okhttp](https://github.com/square/okhttp) so its jar also included
+Download latest jar from [here](https://github.com/burakdd/windigo/raw/master/windigo-release/windigo.jar).
 
 
 # Roadmap
