@@ -32,7 +32,6 @@ import org.apache.http.message.BasicNameValuePair;
 
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.windigo.annotations.Get;
 import com.windigo.annotations.Header;
@@ -44,8 +43,8 @@ import com.windigo.http.Request;
 import com.windigo.http.RequestType;
 import com.windigo.http.Response;
 import com.windigo.http.client.BaseHttpClient;
+import com.windigo.logging.Logger;
 import com.windigo.parsers.ResponseTypeParser;
-import com.windigo.utils.GlobalSettings;
 
 /**
  * @author burakdede
@@ -54,11 +53,7 @@ import com.windigo.utils.GlobalSettings;
  * parse necessarry annotation types and configure
  * 
  */
-public class RestMethodMetaDataCache {
-	
-	private static final String TAG = RestMethodMetaDataCache.class.getCanonicalName();
-	
-	private static final boolean DEBUG = GlobalSettings.DEBUG;
+public class RestApiMethodMetadata {
 
 	private Method method;
 	
@@ -80,7 +75,7 @@ public class RestMethodMetaDataCache {
 	
 	private ResponseTypeParser<? extends Type> typeParser;
 	
-	public RestMethodMetaDataCache(Method method, BaseHttpClient httpClient) {
+	public RestApiMethodMetadata(Method method, BaseHttpClient httpClient) {
 		this.httpClient = httpClient;
 		this.method = method;
 		parseMethodMetaData();
@@ -228,20 +223,27 @@ public class RestMethodMetaDataCache {
      * @throws ExecutionException
      * 
      */
-    public Response makeAsyncRequest(final Request request) 
+    public Object makeAsyncRequest(final Request request) 
     		throws IOException, InterruptedException, ExecutionException {
     	
-    	AsyncTask<Void, Integer, Response> backgroundTask = new AsyncTask<Void, Integer, Response>() {
+    	AsyncTask<Void, Integer, Object> backgroundTask = new AsyncTask<Void, Integer, Object>() {
     		Response response;
+    		Object typedResponseObject;
     		
 			@Override
-			protected Response doInBackground(Void... params) {
+			protected Object doInBackground(Void... params) {
 				try {
-					 response = httpClient.execute(request);
+					response = httpClient.execute(request);
+					if (response != null) response.setContentParser(typeParser);
+					typedResponseObject = typeParser.parse(response.getContentStream());
+					Logger.log("[Response] Typed response object: " + typedResponseObject.toString());
+					
 				} catch (IOException e) {
 					e.printStackTrace();
+				} catch (JsonConversionException e) {
+					e.printStackTrace();
 				}
-				return response;
+				return typedResponseObject;
 			}
     		
 		}.execute();
@@ -267,7 +269,6 @@ public class RestMethodMetaDataCache {
 			throws IOException, InterruptedException, ExecutionException, 
 			IllegalAccessException, IllegalArgumentException, JsonConversionException {
 		
-		Response response;
 		Request request = new Request();
 		String fullUrl = baseUrl + requestPath;
 		
@@ -294,14 +295,6 @@ public class RestMethodMetaDataCache {
 			request.setBodyParams(parsePostBodyFieldParams(bodyParams, args));
 		}
 
-		response = makeAsyncRequest(request);
-		//TODO: would be good if we can set parser at response constructor
-		response.setContentParser(typeParser);
-		
-		//TODO: remove raw response along project
-		//if (DEBUG && response != null) Log.d(TAG, "Raw response: " + response.getRawString());
-		
-		return typeParser.parse(response.getContentStream());
-		
+		return makeAsyncRequest(request);
 	}
 }

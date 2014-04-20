@@ -45,15 +45,13 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
-
-import android.util.Log;
 
 import com.windigo.exception.BaseException;
 import com.windigo.exception.HttpCredentialException;
 import com.windigo.exception.HttpEndpointNotFoundException;
 import com.windigo.http.Request;
 import com.windigo.http.Response;
+import com.windigo.logging.Logger;
 import com.windigo.utils.GlobalSettings;
 import com.windigo.utils.StringHelper;
 
@@ -64,10 +62,6 @@ import com.windigo.utils.StringHelper;
  * 
  */
 public class ApacheHttpClient implements BaseHttpClient {
-	
-	private static final String TAG = ApacheHttpClient.class.getCanonicalName();
-	
-	protected static final boolean DEBUG = GlobalSettings.DEBUG;
 	
 	private Header[] headers;
 
@@ -134,7 +128,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 	 */
 	private HttpResponse doHttpPost(String url, List<NameValuePair> nameValuePairs) throws IOException {
 		
-		if (DEBUG) Log.d(TAG, "doHttpPost for: " + url);
+		Logger.log("[Request] Doing http post with url " + url);
 		HttpPost post = createHttpPostRequest(url, nameValuePairs);
 		
 		return executeHttpRequest(post);
@@ -152,7 +146,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 	 */
 	private HttpResponse doHttpGet(String url, List<NameValuePair> nameValuePairs) throws IOException {
 		
-		if (DEBUG) Log.d(TAG, "doHttpGet for: " + url);
+		Logger.log("[Request] Doing http get with url " + url);
 		HttpGet get = createHttpGetRequest(url, nameValuePairs);
 
 		return executeHttpRequest(get);
@@ -170,12 +164,12 @@ public class ApacheHttpClient implements BaseHttpClient {
 	 */
 	public HttpResponse executeHttpRequest(HttpRequestBase httpRequest) throws IOException {
 		
-		if (DEBUG) Log.d(TAG, "executing HttpRequest for: " 
-			+ httpRequest.getURI().toString());
+		Logger.log("[Request] Executing http request for: " + httpRequest.getURI().toString());
 		
 		// set headers for request
 		if (headers != null && headers.length > 0) {
 			httpRequest.setHeaders(headers);
+			Logger.log("[Request] Found " + headers.length + " header");
 		}
 		
 		try {
@@ -202,7 +196,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 		String queryString = URLEncodedUtils.format(sanitizeParameters(nameValuePairs), HTTP.UTF_8);
 		String fullUrlString = new StringBuilder(url + "?" + queryString).toString();
 		HttpGet httpGet = new HttpGet(fullUrlString);
-		if (DEBUG) Log.d(TAG, "Created http get request " + httpGet.getURI());
+		Logger.log("[Request] Creating http get request " + httpGet.getURI());
 		
 		return httpGet;
 		
@@ -245,7 +239,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 		
 		for (NameValuePair param : paramPairs) {
 			if (param.getValue() != null) {
-				if (DEBUG) Log.d(TAG, "Adding param: " + param);
+				Logger.log("[Request] Adding parameter: " + param.getName() + " " + param.getValue());
 				params.add(param);
 			}
 		}
@@ -259,7 +253,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 		
 		int statusCode = httpResponse.getStatusLine().getStatusCode();
 		InputStream contentStream = httpResponse.getEntity().getContent();
-		Log.d(TAG, "Status code : " + statusCode);
+		Logger.log("[Response] Status code " + statusCode);
 		
 		switch (statusCode) {
 			case 200:
@@ -315,12 +309,16 @@ public class ApacheHttpClient implements BaseHttpClient {
 		
 		CookieManager cookieManager = new CookieManager();
 		CookieHandler.setDefault(cookieManager);
+		Logger.log("[Request] Setting cookie manager");
 		
 	}
 
 
 	@Override
 	public Response execute(Request request) throws IOException {
+		
+		if (request == null) throw new IllegalArgumentException("Request can not be null");
+		Logger.log(request.toString());
 		
 		Response response = null;
 		headers = com.windigo.http.Header.convertToApacheHeaders(request.getHeaders());

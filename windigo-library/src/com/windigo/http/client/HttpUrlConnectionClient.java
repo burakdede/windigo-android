@@ -15,11 +15,9 @@
  */
 package com.windigo.http.client;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
@@ -59,7 +57,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	public Response execute(Request request) throws IOException {
 		
 		if (request == null) throw new IllegalArgumentException("Request can not be null");
-		Logger.log(HttpUrlConnectionClient.class, request.toString());
+		Logger.log(request.toString());
 		
 		setupCookieManager();
 		connection = openHttpURLConnection(request);
@@ -78,6 +76,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		
 		CookieManager cookieManager = new CookieManager();
 		CookieHandler.setDefault(cookieManager);
+		Logger.log("[Request] Setting cookie manager");
 		
 	}
 	
@@ -97,6 +96,9 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		connection.setRequestMethod(request.getHttpRequestType().toString());
 		connection.setConnectTimeout(GlobalSettings.CONNNECTION_TIMEOUT);
 		connection.setReadTimeout(GlobalSettings.CONNECTION_READ_TIMEOUT);
+		Logger.log("[Request] Connection timeout setted to : " + GlobalSettings.CONNNECTION_TIMEOUT);
+		Logger.log("[Request] Connection read timeout setted to : " + GlobalSettings.CONNECTION_READ_TIMEOUT);
+		
 		return connection;
 		
 	}
@@ -116,14 +118,16 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		connection.setDoInput(true);
 		
 		// set headers for request
+		Logger.log("[Request] Found " + request.getHeaders().size() + " header");
 		addHeaders(request.getHeaders());
 		
-		// if its post request
 		if (request.hasBody()) {
+			// if its post request
 			connection.setDoOutput(true);
 			OutputStream os = connection.getOutputStream();
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 			bw.write(writeBodyParams(request.getBodyParams()));
+			
 			// clean up mess
 			bw.flush();
 			bw.close();
@@ -149,6 +153,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		
 		// get actual raw respose string from stream
 		int statusCode = connection.getResponseCode();
+		Logger.log("[Response] Status code : " + statusCode);
 		InputStream is; 
 		
 		if (statusCode >= 400) {
@@ -166,31 +171,6 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	
 	
 	/**
-	 * Buffer input stream and read
-	 *
-	 * 
-	 * @param is
-	 * @return {@link String} response
-	 * @throws IOException
-	 */
-	@Deprecated
-	private String readResponseStream(InputStream is) throws IOException {
-		
-		StringBuffer response = new StringBuffer();
-		String line;
-		BufferedReader br = new BufferedReader(new InputStreamReader(is));
-		
-		while ((line = br.readLine()) != null) {
-			response.append(line);
-		}
-		br.close();
-		
-		return response.toString();
-		
-	}
-	
-	
-	/**
 	 * Read response header to {@link List}
 	 * 
 	 * @return {@link List} of {@link Header}
@@ -202,6 +182,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		for(Map.Entry<String, List<String>> fieldEntry : connection.getHeaderFields().entrySet()) {
 			String nameString = fieldEntry.getKey();
 			for (String value : fieldEntry.getValue()) {
+				Logger.log("[Response] Header => " + nameString + "=" + value);
 				headers.add(new Header(nameString, value));
 			}
 		}
@@ -230,6 +211,8 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 			bodyBuilder.append(URLEncoder.encode(param.getValue(), "UTF-8"));
 		}
 		
+		Logger.log("[Request] Body parameters => " + bodyBuilder.toString());
+		
 		return bodyBuilder.toString();
 		
 	}
@@ -246,6 +229,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 		
 		for (Header header : headers) {
 			connection.addRequestProperty(header.getName(), header.getValue());
+			Logger.log("[Request] Header => " + header.getName() + "=" + header.getValue());
 		}
 		
 	}

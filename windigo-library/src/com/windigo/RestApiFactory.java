@@ -26,6 +26,7 @@ import com.windigo.annotations.Post;
 import com.windigo.annotations.RestApi;
 import com.windigo.http.client.ApacheHttpClient;
 import com.windigo.http.client.BaseHttpClient;
+import com.windigo.utils.GlobalSettings;
 
 /**
  * @author burakdede
@@ -37,8 +38,8 @@ public class RestApiFactory {
 	
 	private static final ConcurrentHashMap<String, Object> cachedServices = 
 			new ConcurrentHashMap<String, Object>();
-	private static final ConcurrentHashMap<Method, RestMethodMetaDataCache> cachedMethodMetaData = 
-			new ConcurrentHashMap<Method, RestMethodMetaDataCache>();
+	private static final ConcurrentHashMap<Method, RestApiMethodMetadata> cachedMethodMetaData = 
+			new ConcurrentHashMap<Method, RestApiMethodMetadata>();
 
 	@SuppressWarnings("unchecked")
 	public static <T> T createNewService(String apiEndpointUrl, Class<T> restServiceClass, BaseHttpClient client) {
@@ -65,6 +66,19 @@ public class RestApiFactory {
 	}
 	
 	
+	public static <T> T createNewService(String apiEndpointUrl, Class<T> restServiceClass, 
+			BaseHttpClient client, boolean debugMode) {
+		
+		if (debugMode) {
+			GlobalSettings.DEBUG = true;
+		} else {
+			GlobalSettings.DEBUG = false;
+		}
+		
+		return createNewService(apiEndpointUrl, restServiceClass, client);
+	}
+	
+	
 	/**
 	 * Initialize method meta data cache for every method
 	 * 
@@ -74,7 +88,7 @@ public class RestApiFactory {
 	private static void setupMethodMetaDataCache(Class<?> restServiceClass, BaseHttpClient httpClient) {
 		for (Method method : restServiceClass.getMethods()) {
 			if (method.isAnnotationPresent(Get.class) || method.isAnnotationPresent(Post.class)) {
-				cachedMethodMetaData.putIfAbsent(method, new RestMethodMetaDataCache(method, httpClient));
+				cachedMethodMetaData.putIfAbsent(method, new RestApiMethodMetadata(method, httpClient));
 			}
 		}
 	}
@@ -95,7 +109,7 @@ public class RestApiFactory {
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			
-			RestMethodMetaDataCache methodMetaDataCache = cachedMethodMetaData.get(method);
+			RestApiMethodMetadata methodMetaDataCache = cachedMethodMetaData.get(method);
 			try {
 				if (methodMetaDataCache != null) {
 					return methodMetaDataCache.invoke(baseUrl, args);

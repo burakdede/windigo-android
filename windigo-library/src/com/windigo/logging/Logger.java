@@ -17,19 +17,24 @@ package com.windigo.logging;
 
 import android.util.Log;
 
+import com.windigo.utils.GlobalSettings;
+
 /**
  * @author burakdede
  *
  * Some logging utilities
+ * 
  */
 public class Logger {
 	
-	public static <T> void log(Class<T> instance, String message) {
-		Log.d(instance.getCanonicalName(), message);
+	private static final String TAG = "Windigo";
+	
+	public static void log(String message) {
+		if (GlobalSettings.DEBUG) Log.d(TAG, message);
 	}
 	
-	public static <T> void log(Class<T> instance, String message, Exception e) {
-		Log.d(instance.getName(), message);
+	public static void log(String message, Exception e) {
+		if (GlobalSettings.DEBUG) Log.d(TAG, message);
 		e.printStackTrace();
 	}
 }

@@ -21,8 +21,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 
-import android.util.Log;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -38,8 +36,6 @@ import com.windigo.utils.GlobalSettings;
  * Parser class for response type
  */
 public class ResponseTypeParser<T> {
-	
-	private static final String TAG = ResponseTypeParser.class.getCanonicalName();
 	
 	private Gson gson;
 	
@@ -57,8 +53,8 @@ public class ResponseTypeParser<T> {
 	}
 	
 	public T parse(InputStream is) throws JsonConversionException {
-		Logger.log(ResponseTypeParser.class, "Parser is taking input stream and expecting of type " + 
-					responseType.getClass());
+		Logger.log("Parser expecting return type of: " + responseType.getClass());
+		
 		try {
 			return gson.fromJson(new InputStreamReader(is, GlobalSettings.CHARSET), responseType);
 		} catch (JsonIOException e) {
@@ -74,20 +70,6 @@ public class ResponseTypeParser<T> {
 				} catch (IOException e) {}
 			}
 		}
-		
-	}
-
-	/**
-	 * Convert json string response data to model object
-	 * 
-	 * @param jsonResponse
-	 * @throws JsonSyntaxException
-	 * @return {@link Type}
-	 */
-	public T parse(String jsonResponse) throws JsonSyntaxException {
-		
-		Log.d(TAG, "Parser is expecting of type " + responseType.getClass());
-		return gson.fromJson(jsonResponse, responseType);
 		
 	}
 }

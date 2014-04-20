@@ -38,6 +38,7 @@ public final class Response {
 	
 	private InputStream contentStream;
 	
+	@SuppressWarnings("unused")
 	private ResponseTypeParser<? extends Type> contentParser;
 
 	/**
