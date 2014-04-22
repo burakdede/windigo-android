@@ -92,7 +92,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 			throws MalformedURLException, IOException {
 		
 		HttpURLConnection connection = (HttpURLConnection) 
-				new URL(request.getFullUrl()).openConnection();
+										new URL(request.getFullUrl()).openConnection();
 		connection.setRequestMethod(request.getHttpRequestType().toString());
 		connection.setConnectTimeout(GlobalSettings.CONNNECTION_TIMEOUT);
 		connection.setReadTimeout(GlobalSettings.CONNECTION_READ_TIMEOUT);

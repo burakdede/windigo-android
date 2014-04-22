@@ -141,15 +141,15 @@ public class Request {
 	public String toString() {
 		StringBuilder requestStringBuilder = new StringBuilder();
 		for(NameValuePair param : queryParams) 
-			requestStringBuilder.append(String.format("%s=%s ", param.getName(), param.getValue()));
+			requestStringBuilder.append(String.format("[QueryParam]%s=%s\n", param.getName(), param.getValue()));
 		
 		for(Header header : headers)
-			requestStringBuilder.append(String.format("%s : %s ", header.getName(), header.getValue()));
+			requestStringBuilder.append(String.format("[Header]%s : %s\n", header.getName(), header.getValue()));
 		
 		for(NameValuePair param : bodyParams) 
-			requestStringBuilder.append(String.format("%s=%s ", param.getName(), param.getValue()));
+			requestStringBuilder.append(String.format("[BodyParam]%s=%s\n", param.getName(), param.getValue()));
 		
-		requestStringBuilder.append(String.format("%s=%s ", "Full url", fullUrl));
+		requestStringBuilder.append(String.format("[Url]%s=%s\n", "Full url", fullUrl));
 		
 		
 		return requestStringBuilder.toString();

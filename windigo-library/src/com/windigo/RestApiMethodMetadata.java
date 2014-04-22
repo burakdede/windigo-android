@@ -17,6 +17,7 @@ package com.windigo;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ import com.windigo.annotations.Header;
 import com.windigo.annotations.Placeholder;
 import com.windigo.annotations.Post;
 import com.windigo.annotations.QueryParam;
+import com.windigo.annotations.QueryParamMap;
+import com.windigo.annotations.QueryParamObject;
 import com.windigo.exception.JsonConversionException;
 import com.windigo.http.Request;
 import com.windigo.http.RequestType;
@@ -66,6 +69,14 @@ public class RestApiMethodMetadata {
 	private Map<Integer, String> placeholderParms = new HashMap<Integer, String>();
 	
 	private Map<Integer, String> headerParams = new HashMap<Integer, String>();
+	
+	private int indexOfQueryParamObject;
+
+	private boolean haveQueryParamObject;
+	
+	private int indexOfQueryMapObject;
+	
+	private boolean haveQueryMapObject;
 	
 	private RequestType requestType;
 	
@@ -115,7 +126,13 @@ public class RestApiMethodMetadata {
 					Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
 					if (annotationType == QueryParam.class) {
 						queryParams.put(i,((QueryParam) parameterAnnotation).value());
-					} else if (annotationType == Placeholder.class) {
+					} else if (annotationType == QueryParamObject.class) {
+						indexOfQueryParamObject = i;
+						haveQueryParamObject = true;
+					} else if (annotationType == QueryParamMap.class) { 
+						indexOfQueryMapObject = i;
+						haveQueryMapObject = true;
+					}else if (annotationType == Placeholder.class) {
 						placeholderParms.put(i, ((Placeholder) parameterAnnotation).value());
 					} else if (annotationType == Header.class) {
 						headerParams.put(i, ((Header) parameterAnnotation).value());
@@ -188,6 +205,63 @@ public class RestApiMethodMetadata {
 	}
     
     
+	/**
+	 * Convert given plain class to query parameters
+	 * for get requests
+	 * 
+	 * @param object
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * 
+	 * @return {@link String} of url encoded query params url 
+	 */
+	private List<NameValuePair> parseQueryParamsObject(Object object) 
+			throws IllegalAccessException, IllegalArgumentException {
+
+		Class<?> paramClass = object.getClass();
+		Field[] fields = paramClass.getDeclaredFields();
+		Map<String, Object> fieldParams = new HashMap<String, Object>();
+
+		for (int i = 0; i < fields.length; i++) {
+			Field field = fields[i];
+			field.setAccessible(true);
+			fieldParams.put(field.getName(), field.get(object));
+		}
+
+
+        List<NameValuePair> vals = new ArrayList<NameValuePair>();
+        for (Map.Entry<String, Object> queryParamEntry : fieldParams.entrySet()) {
+            if (queryParamEntry.getValue() != null) {
+                String value = Uri.encode(queryParamEntry.getValue().toString());
+                vals.add(new BasicNameValuePair(queryParamEntry.getKey(), value));
+            }
+        }
+        
+        return vals;
+	}
+	
+	
+	/**
+	 * Convert given map query parameters to name value pair list
+	 * 
+	 * @param map
+	 * @return {@link List} of {@link NameValuePair}
+	 */
+	private List<NameValuePair> parseQueryParamMap(Map<?, ?> map) {
+		
+		List<NameValuePair> mapParams = new ArrayList<NameValuePair>();
+		
+		for (Map.Entry<?, ?> entry : map.entrySet()) {
+			 if (entry.getValue() != null) { // Skip null values.
+				 Object entryValue = entry.getValue();
+				 mapParams.add(new BasicNameValuePair(entry.getKey().toString(), entryValue.toString()));
+			 }
+		}
+		
+		return mapParams;
+	}
+    
+    
     
     /**
      * Parse header params to {@link com.windigo.http.Header} list
@@ -234,9 +308,12 @@ public class RestApiMethodMetadata {
 			protected Object doInBackground(Void... params) {
 				try {
 					response = httpClient.execute(request);
-					if (response != null) response.setContentParser(typeParser);
-					typedResponseObject = typeParser.parse(response.getContentStream());
-					Logger.log("[Response] Typed response object: " + typedResponseObject.toString());
+					
+					if (response != null) {
+						response.setContentParser(typeParser);
+						typedResponseObject = typeParser.parse(response.getContentStream());
+						Logger.log("[Response] Typed response object: " + typedResponseObject.toString());
+					}
 					
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -271,6 +348,7 @@ public class RestApiMethodMetadata {
 		
 		Request request = new Request();
 		String fullUrl = baseUrl + requestPath;
+		List<NameValuePair> paramsList = new ArrayList<NameValuePair>();
 		
 		request.setHttpRequestType(requestType);
 		request.setFullUrl(fullUrl);
@@ -280,9 +358,22 @@ public class RestApiMethodMetadata {
 			fullUrl = parsePlaceholderParams(fullUrl, placeholderParms, args);
 		}
 		
-		// have query parameter values @QueryParam
+		// have object as query parameter @QueryParamsObject
+		if (haveQueryParamObject) {
+			Logger.log("[Request] haveQueryParamObject=" + haveQueryParamObject);
+			paramsList.addAll(parseQueryParamsObject(args[indexOfQueryParamObject]));
+		}
+		
+		// have query parameter @QueryParamMap
+		if (haveQueryMapObject) {
+			Logger.log("[Request] haveQueryMapObject=" + haveQueryMapObject);
+			paramsList.addAll(parseQueryParamMap((Map<?, ?>) args[indexOfQueryMapObject]));
+		}
+		
+		// have query parameter values @QueryParam convert [param=value]
 		if (queryParams.size() > 0) {
-			request.setQueryParams(parseQueryParams(queryParams, args));
+			Logger.log("[Request] queryParams: " + queryParams.size() + " found");
+			paramsList.addAll(parseQueryParams(queryParams, args));
 		}
 		
 		// have headers parameter @Header
@@ -294,6 +385,9 @@ public class RestApiMethodMetadata {
 		if (requestType == RequestType.POST && bodyParams.size() > 0) {
 			request.setBodyParams(parsePostBodyFieldParams(bodyParams, args));
 		}
+		
+		// set query param list
+		request.setQueryParams(paramsList);
 
 		return makeAsyncRequest(request);
 	}

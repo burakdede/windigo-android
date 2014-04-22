@@ -2,7 +2,9 @@ package com.windigo.sample;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -35,6 +37,7 @@ import com.windigo.http.client.ApacheHttpClient;
 import com.windigo.http.client.HttpUrlConnectionClient;
 import com.windigo.http.client.OkClient;
 import com.windigo.sample.weather.ForecastResponse;
+import com.windigo.sample.weather.LocationRequest;
 import com.windigo.sample.weather.MainResponse;
 import com.windigo.sample.weather.WeatherResponse;
 import com.windigo.sample.weather.WindResponse;
@@ -64,10 +67,25 @@ public class MainActivity extends Activity {
 		
 		// call factory method with url and interface class for rest api		
 		openWeatherApi = RestApiFactory.createNewService("http://api.openweathermap.org/data/2.5", 
-				OpenWeatherApi.class, httpClient);
+				OpenWeatherApi.class, httpUrlConnectionClient);
 		
-		ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
-		responseTextView.setText(forecast.toString());
+		//ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
+		
+		Map<String, Double> forecastMap = new HashMap<String, Double>() {
+			{
+				put("lat", 41.15);
+				put("lon", 29.06);
+			}
+		};
+		ForecastResponse forecastResponse = openWeatherApi.getForecastWithMap(forecastMap);
+
+		
+		
+		//LocationRequest requestObject = new LocationRequest(41.11, 29.05);
+		//ForecastResponse forecastResponseObject = openWeatherApi.getForecastWithObject(requestObject);
+		
+
+		responseTextView.setText(forecastResponse.toString());	
 		
 		// call factory method with url and interface class for rest api
 				//lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
