@@ -44,7 +44,7 @@
                     <pre>
                     <code class="language-java">
     // we need http client
-    HttpUrlConnectionClient httpUrlConnectionClient = new HttpUrlConnectionClient();
+    HttpUrlConnectionClient httpClient = new HttpUrlConnectionClient();
 
     // call factory method with url and interface class for rest api
     lastfmRestApi = RestApiFactory.createNewService("http://ws.audioscrobbler.com", LastfmRestApi.class, httpClient);
@@ -195,7 +195,33 @@ Artist getArtist(@PlaceHolder("id") int id)
 @Get("/weather")
 Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
                                                 </code>
-                                            </pre>                                           
+                                            </pre>
+                                        <h3><code><abbr title="&lt;head&gt;">@QueryParamObject</abbr></code></h3>
+                                            <p>Specify plain java class to map query strings</p>
+                                            <pre>
+                                                <code class="language-java">
+// /weather?lat=x&lng=y
+@Get("/weather")
+Forecast getForecast(@QueryParamObject LocationRequest request)
+                                                </code>
+                                            </pre>
+                                        <h3><code><abbr title="&lt;head&gt;">@QueryParamMap</abbr></code></h3>
+                                            <p>Specify map class to map query parameters</p>
+                                            <pre>
+                                                <code class="language-java">
+// /weather?lat=x&lng=y
+Map<String, Double> forecastMap = new HashMap<String, Double>() {
+    {
+        put("lat", 41.15);
+        put("lon", 29.06);
+    }
+};
+
+
+@Get("/weather")
+Forecast getForecast(@QueryParamMap Map<String, Double> coordinates)
+                                                </code>
+                                            </pre>                                        
                                     </section>
                                     <section class="sec-header">
                                         <h1 class="font-bree-serif">Sample Code</h1>
