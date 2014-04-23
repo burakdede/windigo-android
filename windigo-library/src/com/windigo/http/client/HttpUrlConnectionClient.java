@@ -16,6 +16,7 @@
 package com.windigo.http.client;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,6 +35,8 @@ import java.util.Map;
 
 import org.apache.http.NameValuePair;
 
+import android.content.Context;
+
 import com.windigo.http.Header;
 import com.windigo.http.Request;
 import com.windigo.http.Response;
@@ -42,44 +45,52 @@ import com.windigo.utils.GlobalSettings;
 
 /**
  * @author burakdede
- *
- * {@link HttpUrlConnectionClient} client and some preconfigured methods and configs
+ * 
+ *         {@link HttpUrlConnectionClient} client and some preconfigured methods
+ *         and configs
  * 
  */
-public class HttpUrlConnectionClient implements BaseHttpClient{
-	
+public class HttpUrlConnectionClient implements BaseHttpClient {
+
 	private HttpURLConnection connection;
-	
+
+	private Context context;
+
 	public HttpUrlConnectionClient() {
+	}
+
+	public HttpUrlConnectionClient(Context context) {
+		this();
+		this.context = context;
 	}
 
 	@Override
 	public Response execute(Request request) throws IOException {
-		
-		if (request == null) throw new IllegalArgumentException("Request can not be null");
+
+		if (request == null)
+			throw new IllegalArgumentException("Request can not be null");
 		Logger.log(request.toString());
-		
+
 		setupCookieManager();
 		connection = openHttpURLConnection(request);
 		setupHttpUrlConnectionClient(connection, request);
-		
+
 		return getResponse();
-		
+
 	}
-	
-	
+
 	/**
 	 * Handle cookies with cookie-handler
 	 * 
 	 */
 	private void setupCookieManager() {
-		
+
 		CookieManager cookieManager = new CookieManager();
 		CookieHandler.setDefault(cookieManager);
 		Logger.log("[Request] Setting cookie manager");
-		
+
 	}
-	
+
 	/**
 	 * Open http url connection to url and return connection
 	 * 
@@ -88,55 +99,56 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	protected HttpURLConnection openHttpURLConnection(Request request) 
+	protected HttpURLConnection openHttpURLConnection(Request request)
 			throws MalformedURLException, IOException {
-		
-		HttpURLConnection connection = (HttpURLConnection) 
-										new URL(request.getFullUrl()).openConnection();
+
+		HttpURLConnection connection = (HttpURLConnection) new URL(
+				request.getFullUrl()).openConnection();
 		connection.setRequestMethod(request.getHttpRequestType().toString());
 		connection.setConnectTimeout(GlobalSettings.CONNNECTION_TIMEOUT);
 		connection.setReadTimeout(GlobalSettings.CONNECTION_READ_TIMEOUT);
-		Logger.log("[Request] Connection timeout setted to : " + GlobalSettings.CONNNECTION_TIMEOUT);
-		Logger.log("[Request] Connection read timeout setted to : " + GlobalSettings.CONNECTION_READ_TIMEOUT);
-		
+		Logger.log("[Request] Connection timeout setted to : "
+				+ GlobalSettings.CONNNECTION_TIMEOUT);
+		Logger.log("[Request] Connection read timeout setted to : "
+				+ GlobalSettings.CONNECTION_READ_TIMEOUT);
+
 		return connection;
-		
+
 	}
-	
-	
+
 	/**
-	 * Setup {@link HttpURLConnection} to remote url
-	 * set some configuration and body if exist
+	 * Setup {@link HttpURLConnection} to remote url set some configuration and
+	 * body if exist
 	 * 
 	 * @param request
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	private void setupHttpUrlConnectionClient(HttpURLConnection connection, Request request) 
-			throws MalformedURLException, IOException {
+	private void setupHttpUrlConnectionClient(HttpURLConnection connection,
+			Request request) throws MalformedURLException, IOException {
 
 		connection.setDoInput(true);
-		
+
 		// set headers for request
 		Logger.log("[Request] Found " + request.getHeaders().size() + " header");
 		addHeaders(request.getHeaders());
-		
+
 		if (request.hasBody()) {
 			// if its post request
 			connection.setDoOutput(true);
 			OutputStream os = connection.getOutputStream();
-			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os,
+					"UTF-8"));
 			bw.write(writeBodyParams(request.getBodyParams()));
-			
+
 			// clean up mess
 			bw.flush();
 			bw.close();
 			os.close();
 		}
-		
+
 	}
-	
-	
+
 	/**
 	 * Form response wrapper with {@link Response} object
 	 * 
@@ -144,93 +156,120 @@ public class HttpUrlConnectionClient implements BaseHttpClient{
 	 * @throws IOException
 	 */
 	private Response getResponse() throws IOException {
-		
+
 		String reason = connection.getResponseMessage();
+		long start = System.nanoTime();
 		reason = (reason == null ? "" : reason);
-		
+
 		// get headers of response
 		List<Header> headers = getResponseHeaders();
-		
+
 		// get actual raw respose string from stream
 		int statusCode = connection.getResponseCode();
 		Logger.log("[Response] Status code : " + statusCode);
-		InputStream is; 
-		
+		InputStream is;
+
 		if (statusCode >= 400) {
 			is = connection.getErrorStream();
 		} else {
 			is = connection.getInputStream();
 		}
-		
-		//TODO: remove raw string response along project
-		//String rawString = readResponseStream(is);
-		
-		return new Response(statusCode, reason, headers, is);
-		
+
+		// TODO: remove raw string response along project
+		// String rawString = readResponseStream(is);
+		Response response = new Response(statusCode, reason, headers, is);
+		long end = System.nanoTime();
+		Logger.log("[Response] Response time: " + (end - start) / 1000d
+				+ " seconds");
+		return response;
+
 	}
-	
-	
+
 	/**
 	 * Read response header to {@link List}
 	 * 
 	 * @return {@link List} of {@link Header}
 	 */
 	private List<Header> getResponseHeaders() {
-		
+
 		List<Header> headers = new ArrayList<Header>();
-		
-		for(Map.Entry<String, List<String>> fieldEntry : connection.getHeaderFields().entrySet()) {
+
+		for (Map.Entry<String, List<String>> fieldEntry : connection
+				.getHeaderFields().entrySet()) {
 			String nameString = fieldEntry.getKey();
 			for (String value : fieldEntry.getValue()) {
 				Logger.log("[Response] Header => " + nameString + "=" + value);
 				headers.add(new Header(nameString, value));
 			}
 		}
-		
+
 		return headers;
-		
+
 	}
-	
-	
+
 	/**
-	 * Writes body parameters to as %s=%s url
-	 * encoded format
+	 * Writes body parameters to as %s=%s url encoded format
 	 * 
 	 * @param bodyParams
 	 * @return {@link String}
 	 * @throws UnsupportedEncodingException
 	 */
-	private String writeBodyParams(List<NameValuePair> bodyParams) 
+	private String writeBodyParams(List<NameValuePair> bodyParams)
 			throws UnsupportedEncodingException {
-		
+
 		StringBuilder bodyBuilder = new StringBuilder();
-		
+
 		for (NameValuePair param : bodyParams) {
 			bodyBuilder.append(URLEncoder.encode(param.getName(), "UTF-8"));
 			bodyBuilder.append("=");
 			bodyBuilder.append(URLEncoder.encode(param.getValue(), "UTF-8"));
 		}
-		
+
 		Logger.log("[Request] Body parameters => " + bodyBuilder.toString());
-		
+
 		return bodyBuilder.toString();
-		
+
 	}
-	
-	
+
 	/**
 	 * Set the header list to {@link URLConnection} object
 	 * 
 	 * @param headers
 	 */
 	private void addHeaders(List<Header> headers) {
-		
-		if (headers.size() == 0) return;
-		
+
+		if (headers.size() == 0)
+			return;
+
 		for (Header header : headers) {
 			connection.addRequestProperty(header.getName(), header.getValue());
-			Logger.log("[Request] Header => " + header.getName() + "=" + header.getValue());
+			Logger.log("[Request] Header => " + header.getName() + "="
+					+ header.getValue());
 		}
-		
+
+	}
+
+	/**
+	 * Setup transparent http response cache for http clients
+	 * 
+	 */
+	@Override
+	public void setupResponseCache() {
+
+		if (context == null) {
+			throw new IllegalStateException(
+					"Context of the application is null");
+		}
+
+		try {
+			File httpCacheDir = new File(context.getCacheDir(), "http");
+			long httpCacheSize = 10 * 1024 * 1024; // 10 mb
+			Class.forName("android.net.http.HttpResponseCache")
+					.getMethod("install", File.class, long.class)
+					.invoke(null, httpCacheDir, httpCacheSize);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }

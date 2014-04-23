@@ -20,14 +20,15 @@ import java.io.IOException;
 import com.windigo.http.Request;
 import com.windigo.http.Response;
 
-
 /**
  * @author burakdede
  * 
- * Base http client interface
+ *         Base http client interface
  * 
  */
 public interface BaseHttpClient {
 
 	Response execute(Request request) throws IOException;
+
+	void setupResponseCache();
 }
