@@ -21,31 +21,41 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
+import android.content.Context;
+
 import com.squareup.okhttp.OkHttpClient;
 import com.windigo.http.Request;
 import com.windigo.utils.GlobalSettings;
 
 /**
  * @author burakdede
- *
- * Square's {@link OkHttpClient}
+ * 
+ *         Square's {@link OkHttpClient}
  * 
  */
 public class OkClient extends HttpUrlConnectionClient {
-	
+
 	private final OkHttpClient client;
-	
+
 	private static OkHttpClient generateDefaultOkHttp() {
-	    OkHttpClient client = new OkHttpClient();
-	    client.setConnectTimeout(GlobalSettings.CONNNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
-	    client.setReadTimeout(GlobalSettings.CONNECTION_READ_TIMEOUT, TimeUnit.MILLISECONDS);
-	    return client;
+		OkHttpClient client = new OkHttpClient();
+		client.setConnectTimeout(GlobalSettings.CONNNECTION_TIMEOUT,
+				TimeUnit.MILLISECONDS);
+		client.setReadTimeout(GlobalSettings.CONNECTION_READ_TIMEOUT,
+				TimeUnit.MILLISECONDS);
+		return client;
 	}
-	
+
 	public OkClient() {
 		this(generateDefaultOkHttp());
 	}
-	
+
+	public OkClient(Context context) {
+		this();
+		this.context = context;
+		setupResponseCache();
+	}
+
 	public OkClient(OkHttpClient client) {
 		this.client = client;
 	}

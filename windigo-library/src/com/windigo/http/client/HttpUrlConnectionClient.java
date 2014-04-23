@@ -54,7 +54,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient {
 
 	private HttpURLConnection connection;
 
-	private Context context;
+	protected Context context;
 
 	public HttpUrlConnectionClient() {
 	}
@@ -62,6 +62,7 @@ public class HttpUrlConnectionClient implements BaseHttpClient {
 	public HttpUrlConnectionClient(Context context) {
 		this();
 		this.context = context;
+		setupResponseCache();
 	}
 
 	@Override

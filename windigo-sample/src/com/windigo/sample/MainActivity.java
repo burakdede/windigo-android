@@ -56,19 +56,20 @@ public class MainActivity extends Activity {
 		responseTextView = (TextView) findViewById(R.id.responseTextView);
 
 		// apache http client bundled with android
-		ApacheHttpClient httpClient = new ApacheHttpClient();
+		ApacheHttpClient httpClient = new ApacheHttpClient(
+				getApplicationContext());
 
 		// android http url connection client
 		HttpUrlConnectionClient httpUrlConnectionClient = new HttpUrlConnectionClient(
 				getApplicationContext());
 
 		// square okhttp client
-		OkClient okHttpClient = new OkClient();
+		OkClient okHttpClient = new OkClient(getApplicationContext());
 
 		// call factory method with url and interface class for rest api
 		openWeatherApi = RestApiFactory.createNewService(
 				"http://api.openweathermap.org/data/2.5", OpenWeatherApi.class,
-				httpUrlConnectionClient);
+				httpClient);
 
 		// ForecastResponse forecast = openWeatherApi.getForecast(41.163267,
 		// 29.094187);

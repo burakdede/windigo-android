@@ -80,6 +80,7 @@ public class ApacheHttpClient implements BaseHttpClient {
 	public ApacheHttpClient(Context context) {
 		this();
 		this.context = context;
+		setupResponseCache();
 	}
 
 	/**
@@ -355,14 +356,17 @@ public class ApacheHttpClient implements BaseHttpClient {
 			HttpResponse httpGetResponse = doHttpGet(request.getFullUrl(),
 					request.getQueryParams());
 			response = handleHttpResponse(httpGetResponse);
+			long endGet = System.nanoTime();
+			Logger.log("[Response] Response time: " + (endGet - start) / 1000d
+					+ " seconds");
 			return response;
 
 		case POST:
 			HttpResponse httpPostResponse = doHttpPost(request.getFullUrl(),
 					request.getBodyParams());
 			response = handleHttpResponse(httpPostResponse);
-			long end = System.nanoTime();
-			Logger.log("[Response] Response time: " + (end - start) / 1000d
+			long endPost = System.nanoTime();
+			Logger.log("[Response] Response time: " + (endPost - start) / 1000d
 					+ " seconds");
 			return response;
 
