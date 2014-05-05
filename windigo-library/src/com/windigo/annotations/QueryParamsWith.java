@@ -24,9 +24,11 @@ import java.lang.annotation.Target;
 /**
  * @author burakdede
  *
+ * Annotation for sending plain java objects
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface QueryParamMap {
+public @interface QueryParamsWith {
+
 }
