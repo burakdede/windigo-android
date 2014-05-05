@@ -182,7 +182,7 @@ User getUser(@Header("X-Auth") String token, @Header("Accept-Encoding") String e
                                             <p>Specify placeholders on endpoint to replace with parmeters</p>
                                             <pre>
                                                 <code class="language-java">
-Get("/artist/{id}")
+@Get("/artist/{id}")
 Artist getArtist(@PlaceHolder("id") int id)
                                                 </code>
                                             </pre> 
