@@ -196,19 +196,15 @@ Artist getArtist(@PlaceHolder("id") int id)
 Forecast getForecast(@QueryParam("lat") double lat, @QueryParam("lng") double lng)
                                                 </code>
                                             </pre>
-                                        <h3><code><abbr title="&lt;head&gt;">@QueryParamObject</abbr></code></h3>
-                                            <p>Specify plain java class to map query strings</p>
+                                        <h3><code><abbr title="&lt;head&gt;">@QueryParamsWith</abbr></code></h3>
+                                            <p>Specify Map or POJO to map query strings</p>
                                             <pre>
                                                 <code class="language-java">
-// /weather?lat=x&lng=y
+//Map Usage:
+
 @Get("/weather")
-Forecast getForecast(@QueryParamObject LocationRequest request)
-                                                </code>
-                                            </pre>
-                                        <h3><code><abbr title="&lt;head&gt;">@QueryParamMap</abbr></code></h3>
-                                            <p>Specify map class to map query parameters</p>
-                                            <pre>
-                                                <code class="language-java">
+Forecast getForecast(@QueryParamsWith Map<String, Double> coordinates)
+
 // /weather?lat=x&lng=y
 Map<String, Double> forecastMap = new HashMap<String, Double>() {
     {
@@ -216,12 +212,26 @@ Map<String, Double> forecastMap = new HashMap<String, Double>() {
         put("lon", 29.06);
     }
 };
+getForecast(forecastMap);
 
+//POJO Usage:
 
+// /weather?lat=x&lng=y
 @Get("/weather")
-Forecast getForecast(@QueryParamMap Map<String, Double> coordinates)
+Forecast getForecast(@QueryParamsWith LocationRequest request)
+
+class LocationRequest {
+	public double lat;
+	public double lon;
+	
+	public LocationRequest(double lat, double lon) {
+		this.lat = lat;
+		this.lon = lon;
+	}
+}
+getForecast(new LocationRequest(41.15, 29.06));
                                                 </code>
-                                            </pre>                                        
+                                            </pre>
                                     </section>
                                     <section class="sec-header">
                                         <h1 class="font-bree-serif">Sample Code</h1>
