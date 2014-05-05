@@ -1,14 +1,13 @@
 package com.windigo.sample;
 
-import java.util.Map;
-
 import com.windigo.annotations.Get;
 import com.windigo.annotations.QueryParam;
-import com.windigo.annotations.QueryParamMap;
-import com.windigo.annotations.QueryParamObject;
+import com.windigo.annotations.QueryParamsWith;
 import com.windigo.annotations.RestApi;
 import com.windigo.sample.weather.ForecastResponse;
 import com.windigo.sample.weather.LocationRequest;
+
+import java.util.Map;
 
 @RestApi
 public interface OpenWeatherApi {
@@ -18,9 +17,9 @@ public interface OpenWeatherApi {
 	
 	
 	@Get("/weather")
-	ForecastResponse getForecastWithMap(@QueryParamMap Map<String, Double> coordinates);
+	ForecastResponse getForecastWithMap(@QueryParamsWith Map<String, Double> coordinates);
 	
 	
 	@Get("/weather")
-	ForecastResponse getForecastWithObject(@QueryParamObject LocationRequest location);
+	ForecastResponse getForecastWithObject(@QueryParamsWith LocationRequest location);
 }

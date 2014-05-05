@@ -1,11 +1,16 @@
 package com.windigo.sample;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import android.app.Activity;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.Menu;
+import android.widget.TextView;
+import com.windigo.RestApiFactory;
+import com.windigo.android.windigotest.R;
+import com.windigo.http.client.ApacheHttpClient;
+import com.windigo.http.client.HttpUrlConnectionClient;
+import com.windigo.http.client.OkClient;
+import com.windigo.sample.weather.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -25,25 +30,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.view.Menu;
-import android.widget.TextView;
-
-import com.windigo.RestApiFactory;
-import com.windigo.android.windigotest.R;
-import com.windigo.http.client.ApacheHttpClient;
-import com.windigo.http.client.HttpUrlConnectionClient;
-import com.windigo.http.client.OkClient;
-import com.windigo.sample.weather.ForecastResponse;
-import com.windigo.sample.weather.MainResponse;
-import com.windigo.sample.weather.WeatherResponse;
-import com.windigo.sample.weather.WindResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends Activity {
 
-	private TextView responseTextView;
+	private TextView mTvParamResponse;
+	private TextView mTvMapResponse;
+	private TextView mTvObjectResponse;
+
 	private LastfmRestApi lastfmRestApi;
 	private OpenWeatherApi openWeatherApi;
 
@@ -53,7 +51,10 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		responseTextView = (TextView) findViewById(R.id.responseTextView);
+
+		mTvParamResponse = (TextView) findViewById(R.id.tv_response_param);
+		mTvMapResponse = (TextView) findViewById(R.id.tv_response_map);
+		mTvObjectResponse = (TextView) findViewById(R.id.tv_response_object);
 
 		// apache http client bundled with android
 		ApacheHttpClient httpClient = new ApacheHttpClient(
@@ -71,24 +72,24 @@ public class MainActivity extends Activity {
 				"http://api.openweathermap.org/data/2.5", OpenWeatherApi.class,
 				httpClient);
 
-		// ForecastResponse forecast = openWeatherApi.getForecast(41.163267,
-		// 29.094187);
+		//QueryParam sample
+		ForecastResponse forecast = openWeatherApi.getForecast(41.163267, 29.094187);
+		mTvParamResponse.setText(forecast.toString());
 
+		//QueryParamWith Map sample
 		Map<String, Double> forecastMap = new HashMap<String, Double>() {
 			{
 				put("lat", 41.15);
 				put("lon", 29.06);
 			}
 		};
+		ForecastResponse forecastResponse = openWeatherApi.getForecastWithMap(forecastMap);
+		mTvMapResponse.setText(forecastResponse.toString());
 
-		ForecastResponse forecastResponse = openWeatherApi
-				.getForecastWithMap(forecastMap);
-
-		// LocationRequest requestObject = new LocationRequest(41.11, 29.05);
-		// ForecastResponse forecastResponseObject =
-		// openWeatherApi.getForecastWithObject(requestObject);
-
-		responseTextView.setText(forecastResponse.toString());
+		//QueryParamWith Object sample
+		LocationRequest requestObject = new LocationRequest(41.11, 29.05);
+		ForecastResponse forecastResponseObject = openWeatherApi.getForecastWithObject(requestObject);
+		mTvObjectResponse.setText(forecastResponseObject.toString());
 
 		// call factory method with url and interface class for rest api
 		// lastfmRestApi =
@@ -98,7 +99,7 @@ public class MainActivity extends Activity {
 		// Album album = lastfmRestApi.getAlbumInfo("album.getinfo",
 		// "49f6b21cab1c48100ee59f216645275e",
 		// "Cher", "Believe", "json").getAlbum();
-		// responseTextView.setText(album.toString());
+		// mTvMapResponse.setText(album.toString());
 
 		// old way
 		// new RegularHttpRestTask().execute();
@@ -182,8 +183,8 @@ public class MainActivity extends Activity {
 		protected void onPostExecute(ForecastResponse result) {
 			super.onPostExecute(result);
 			// use however you want
-			// responseTextView.setText(result.getWind());
-			responseTextView.setText(result.toString());
+			// mTvMapResponse.setText(result.getWind());
+			mTvMapResponse.setText(result.toString());
 		}
 
 	}
