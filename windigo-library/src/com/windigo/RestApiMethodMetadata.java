@@ -15,20 +15,6 @@
  */
 package com.windigo;
 
-import android.net.Uri;
-import android.os.AsyncTask;
-import com.windigo.annotations.*;
-import com.windigo.exception.JsonConversionException;
-import com.windigo.http.Request;
-import com.windigo.http.RequestType;
-import com.windigo.http.Response;
-import com.windigo.http.client.BaseHttpClient;
-import com.windigo.logging.Logger;
-import com.windigo.parsers.ResponseTypeParser;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -40,6 +26,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+
+import android.net.Uri;
+import android.os.AsyncTask;
+
+import com.windigo.annotations.Get;
+import com.windigo.annotations.Header;
+import com.windigo.annotations.Placeholder;
+import com.windigo.annotations.Post;
+import com.windigo.annotations.QueryParam;
+import com.windigo.annotations.QueryParamsWith;
+import com.windigo.exception.JsonConversionException;
+import com.windigo.http.Request;
+import com.windigo.http.RequestType;
+import com.windigo.http.Response;
+import com.windigo.http.client.BaseHttpClient;
+import com.windigo.logging.Logger;
+import com.windigo.parsers.ResponseTypeParser;
 
 /**
  * @author burakdede
@@ -197,6 +204,7 @@ public class RestApiMethodMetadata {
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 */
+	@SuppressWarnings("unchecked")
 	private List<NameValuePair> parseQueryParamsWith(Object object)
 			throws IllegalAccessException, IllegalArgumentException {
 

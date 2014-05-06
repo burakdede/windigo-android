@@ -1,16 +1,11 @@
 package com.windigo.sample;
 
-import android.app.Activity;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.view.Menu;
-import android.widget.TextView;
-import com.windigo.RestApiFactory;
-import com.windigo.android.windigotest.R;
-import com.windigo.http.client.ApacheHttpClient;
-import com.windigo.http.client.HttpUrlConnectionClient;
-import com.windigo.http.client.OkClient;
-import com.windigo.sample.weather.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -30,11 +25,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import android.app.Activity;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.Menu;
+import android.widget.TextView;
+
+import com.windigo.RestApiFactory;
+import com.windigo.android.windigotest.R;
+import com.windigo.http.client.ApacheHttpClient;
+import com.windigo.http.client.HttpUrlConnectionClient;
+import com.windigo.http.client.OkClient;
+import com.windigo.sample.weather.ForecastResponse;
+import com.windigo.sample.weather.LocationRequest;
+import com.windigo.sample.weather.MainResponse;
+import com.windigo.sample.weather.WeatherResponse;
+import com.windigo.sample.weather.WindResponse;
 
 public class MainActivity extends Activity {
 
@@ -45,7 +51,7 @@ public class MainActivity extends Activity {
 	private LastfmRestApi lastfmRestApi;
 	private OpenWeatherApi openWeatherApi;
 
-	private static final String TAG = MainActivity.class.getCanonicalName();
+	//private static final String TAG = MainActivity.class.getCanonicalName();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
