@@ -3,7 +3,7 @@
 ### **Windigo**, is easy to use type-safe rest/http client for android and *android developers*. 
 
 
-# Documentation
+# Documentation
 
 Refer to **[documentation site](http://burakdd.github.io/windigo/)** for more info.
 
