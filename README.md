@@ -1,10 +1,6 @@
-# Windigo
+# Windigo 
 
-![Windigo icon](http://cl.ly/image/1m1A3u3W3M2Z/Tonto-depp.jpg)
-
-> In movie The Lone Ranger, Tonto claims to be the last **Windigo** Hunter of the Comanche and is adamant that Butch Cavendish is a **Windigo***.  
-
-###**Windigo**, is easy to use type-safe rest/http client for android and *android developers*. 
+### **Windigo**, is easy to use type-safe rest/http client for android and *android developers*. 
 
 
 # Documentation
